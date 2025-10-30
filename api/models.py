@@ -8,6 +8,10 @@ def user_directory_path(instance, filename):
     """Genera la ruta de archivo para nuevos documentos: MEDIA_ROOT/user_<id>/<filename>"""
     return f'user_{instance.owner.id}/{filename}'
 
+def user_preview_directory_path(instance, filename):
+    """Genera la ruta de archivo para las vistas previas: MEDIA_ROOT/user_<id>/previews/<filename>"""
+    return f'user_{instance.owner.id}/previews/{filename}'
+
 # Create your models here.
 
 
@@ -21,6 +25,11 @@ class Profile(models.Model):
         max_length=10, default='es', help_text="Preferencia de idioma (ej: 'es', 'en')")
     subscription_plan = models.CharField(
         max_length=20, default='free', help_text="Plan de suscripción del usuario (ej: 'free', 'premium')")
+    
+    # --- CAMPO AÑADIDO PARA UC-21 ---
+    preferred_translation_api = models.CharField(
+        max_length=50, default='google_translate', help_text="API de traducción preferida")
+    # --- FIN DEL CAMPO AÑADIDO ---
 
     def __str__(self):
         return f"Perfil de {self.user.username}"
@@ -59,9 +68,15 @@ class Document(models.Model):
     folder = models.ForeignKey(
         Folder, on_delete=models.SET_NULL, related_name='documents', null=True, blank=True)
     file = models.FileField(upload_to=user_directory_path)
+    # UC-12: Campo para la vista previa
+    preview = models.ImageField(
+        upload_to=user_preview_directory_path, null=True, blank=True)
+    # UC-15: Campo para el contenido extraído para búsqueda
+    extracted_content = models.TextField(blank=True)
     uploaded_at = models.DateTimeField(auto_now_add=True)
     tags = models.ManyToManyField(
         'Tag', blank=True, related_name='documents')
+
 
     def __str__(self):
         return f"Documento '{self.file.name}' de {self.owner.username}"
@@ -101,3 +116,27 @@ class DocumentPermission(models.Model):
 
     def __str__(self):
         return f"Permiso de '{self.permission_level}' para {self.user.username} en {self.document.file.name}"
+
+
+# --- NUEVO MODELO AÑADIDO PARA UC-20 ---
+class TranslationHistory(models.Model):
+    """
+    Almacena un registro de cada traducción realizada.
+    """
+    original_document = models.ForeignKey(
+        Document, on_delete=models.CASCADE, related_name='translations')
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='translation_history')
+    source_language = models.CharField(
+        max_length=10, help_text="Idioma de origen (ej: 'es')")
+    target_language = models.CharField(
+        max_length=10, help_text="Idioma de destino (ej: 'en')")
+    translated_content = models.TextField(
+        blank=True, help_text="Contenido del documento traducido.")
+    translated_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-translated_at'] # Muestra los más recientes primero
+
+    def __str__(self):
+        return f"Traducción de {self.original_document.file.name} a {self.target_language} por {self.user.username}"
