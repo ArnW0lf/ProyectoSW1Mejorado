@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'corsheaders',
     'api',
     # Apps de terceros para la API y autenticación
     'rest_framework',
@@ -58,6 +59,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -160,16 +162,20 @@ REST_FRAMEWORK = {
         'django_filters.rest_framework.DjangoFilterBackend',
     ],
 }
-
 # Configuración de django-allauth (usado por dj-rest-auth)
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = True
 ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
 # La verificación de correo es ahora obligatoria para poder iniciar sesión.
 ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
-
 # Durante el desarrollo, los correos se imprimirán en la consola en lugar de ser enviados.
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-
-# Le dice a allauth que use nuestra vista de API para la confirmación
-ACCOUNT_CONFIRM_EMAIL_ON_GET = True
+# --- Configuración de CORS ---
+# Lista de orígenes permitidos para peticiones CORS
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",  # Puerto común para Vite/React
+    "http://localhost:3000",  # Puerto común para React
+    # Añade aquí otros orígenes si es necesario
+]
+# Opcional: Permite que el frontend envíe cookies (necesario para sesiones)
+CORS_ALLOW_CREDENTIALS = True
