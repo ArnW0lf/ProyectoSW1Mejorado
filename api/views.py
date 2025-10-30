@@ -106,8 +106,21 @@ class DocumentViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         # Asigna el usuario actual como propietario al subir un documento
-        serializer.save(owner=self.request.user)
+        document = serializer.save(owner=self.request.user)
 
+        # --- INICIO DE LA MODIFICACIÓN ---
+        # Después de crear el documento, intentamos extraer su contenido.
+        # Por ahora, solo soportamos archivos .txt
+        file_path = document.file.path
+        if file_path.lower().endswith('.txt'):
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    document.extracted_content = f.read()
+                document.save()
+            except Exception as e:
+                # Opcional: registrar el error si la lectura falla
+                print(f"No se pudo leer el contenido del archivo {file_path}: {e}")
+        # --- FIN DE LA MODIFICACIÓN ---
     @action(detail=True, methods=['get'])
     def download(self, request, pk=None):
         """
