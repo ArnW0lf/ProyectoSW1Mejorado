@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Profile, Folder, Document, Tag, DocumentPermission
+from .models import Profile, Folder, Document, Tag, DocumentPermission, TranslationHistory
 
 
 class ProfileSerializer(serializers.ModelSerializer):
@@ -8,7 +8,7 @@ class ProfileSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = Profile
-        fields = ['language_preference', 'subscription_plan']
+        fields = ['language_preference', 'subscription_plan', 'preferred_translation_api']
 
 
 class FolderSerializer(serializers.ModelSerializer):
@@ -23,16 +23,23 @@ class FolderSerializer(serializers.ModelSerializer):
 class DocumentSerializer(serializers.ModelSerializer):
     """Serializer para el modelo Document."""
     owner = serializers.ReadOnlyField(source='owner.username')
-    file_url = serializers.SerializerMethodField()
+    file_url = serializers.SerializerMethodField(read_only=True)
+    preview_url = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Document
-        fields = ['id', 'owner', 'folder', 'file',
-                  'file_url', 'uploaded_at', 'tags']
-        read_only_fields = ['file_url', 'uploaded_at']
+        # Ocultamos 'extracted_content' de la respuesta de la API
+        fields = ['id', 'owner', 'folder', 'file', 'file_url',
+                  'preview_url', 'uploaded_at', 'tags']
+        read_only_fields = ['uploaded_at']
 
     def get_file_url(self, obj):
         return self.context['request'].build_absolute_uri(obj.file.url)
+
+    def get_preview_url(self, obj):
+        if obj.preview:
+            return self.context['request'].build_absolute_uri(obj.preview.url)
+        return None
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -40,6 +47,27 @@ class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
         fields = ['id', 'name']
+
+class TranslationHistorySerializer(serializers.ModelSerializer):
+    """
+    UC-20: Serializer para el historial de traducciones.
+    """
+    # Usamos ReadOnlyField para mostrar información del usuario y documento sin permitir su modificación
+    user = serializers.ReadOnlyField(source='user.username')
+    original_document_name = serializers.ReadOnlyField(source='original_document.file.name')
+
+    class Meta:
+        model = TranslationHistory
+        fields = [
+            'id',
+            'user',
+            'original_document',
+            'original_document_name',
+            'source_language',
+            'target_language',
+            'translated_content',
+            'translated_at'
+        ]
 
 
 class DocumentPermissionSerializer(serializers.ModelSerializer):
