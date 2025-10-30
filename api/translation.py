@@ -1,4 +1,5 @@
 from googletrans import Translator, LANGUAGES
+import asyncio
 
 def translate_text(text, target_language, source_language=None):
     """
@@ -18,18 +19,23 @@ def translate_text(text, target_language, source_language=None):
     if target_language not in LANGUAGES:
         return {'error': f"El idioma de destino '{target_language}' no es válido."}
 
-    try:
+    # --- INICIO DE LA CORRECCIÓN ---
+    # googletrans 4.0.0-rc1 es asíncrono. Necesitamos ejecutar la corutina.
+    async def do_translation():
         translator = Translator()
-        
         # Si se especifica el idioma de origen, lo usamos. Si no, se detecta.
         if source_language and source_language in LANGUAGES:
-            translation = translator.translate(text, dest=target_language, src=source_language)
+            return await translator.translate(text, dest=target_language, src=source_language)
         else:
-            translation = translator.translate(text, dest=target_language)
+            return await translator.translate(text, dest=target_language)
 
+    try:
+        # Ejecutamos la función asíncrona desde nuestro contexto síncrono
+        translation = asyncio.run(do_translation())
         return {
             'translated_text': translation.text,
             'detected_source_language': translation.src
         }
+    # --- FIN DE LA CORRECCIÓN ---
     except Exception as e:
         return {'error': f"Ocurrió un error durante la traducción: {str(e)}"}
