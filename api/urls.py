@@ -2,13 +2,14 @@
 
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import test_endpoint, ProfileDetailView, FolderViewSet, DocumentViewSet, TagViewSet
+from .views import test_endpoint, ProfileDetailView, FolderViewSet, DocumentViewSet, TagViewSet, TranslationHistoryViewSet
 
 # Creamos un router y registramos nuestros viewsets
 router = DefaultRouter()
 router.register(r'folders', FolderViewSet, basename='folder')
 router.register(r'documents', DocumentViewSet, basename='document')
 router.register(r'tags', TagViewSet, basename='tag')
+router.register(r'translation-history', TranslationHistoryViewSet, basename='translation-history')
 
 urlpatterns = [
     path('test/', test_endpoint, name='test_endpoint'),

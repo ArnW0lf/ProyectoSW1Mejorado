@@ -1,3 +1,8 @@
+from .models import TranslationHistory  # Asegúrate que esté importado
+# Asegúrate que esté importado
+from .serializers import TranslationHistorySerializer
+from .translation import translate_text  # Importa nuestra nueva función
+import os
 from django.http import JsonResponse, FileResponse
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -96,7 +101,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
     # Configuración de filtros y búsqueda
     filter_backends = [DjangoFilterBackend, SearchFilter]
     # Permite buscar por nombre de archivo y nombre de etiqueta
-    search_fields = ['file', 'tags__name']
+    search_fields = ['file', 'tags__name', 'extracted_content']
     filterset_fields = ['tags']  # Permite filtrar por el ID de la etiqueta
 
     def perform_create(self, serializer):
@@ -140,3 +145,83 @@ class DocumentViewSet(viewsets.ModelViewSet):
             )
             return Response({'detail': f'Documento compartido con el usuario {user_id} con permiso de {permission_level}.'}, status=200)
         return Response(serializer.errors, status=400)
+
+    # --- INICIO DE NUEVAS ACCIONES (AÑADIR ESTO DENTRO DE DocumentViewSet) ---
+
+    @action(detail=True, methods=['post'], url_path='translate-text')
+    def translate_text_snippet(self, request, pk=None):
+        """
+        UC-19: Traduce un fragmento de texto proporcionado.
+        """
+        document = self.get_object()  # Para asegurar permisos
+        text_to_translate = request.data.get('text')
+        target_language = request.data.get(
+            'target_language', 'en')  # 'en' por defecto
+        source_language = request.data.get('source_language')  # Opcional
+
+        if not text_to_translate:
+            return Response({'error': 'El campo "text" es requerido.'}, status=400)
+
+        result = translate_text(
+            text_to_translate, target_language, source_language)
+
+        if 'error' in result:
+            return Response(result, status=400)
+
+        # Opcional: Guardar en el historial
+        TranslationHistory.objects.create(
+            original_document=document,
+            user=request.user,
+            source_language=result['detected_source_language'],
+            target_language=target_language,
+            translated_content=f"Fragmento: '{text_to_translate}' -> '{result['translated_text']}'"
+        )
+
+        return Response(result, status=200)
+
+    @action(detail=True, methods=['post'], url_path='translate-document')
+    def translate_document(self, request, pk=None):
+        """
+        UC-17 & UC-18: Traduce el contenido extraído de un documento.
+        """
+        document = self.get_object()
+        target_language = request.data.get('target_language')
+        source_language = request.data.get('source_language')
+
+        if not target_language:
+            return Response({'error': 'El campo "target_language" es requerido.'}, status=400)
+
+        if not document.extracted_content:
+            return Response({'error': 'El documento no tiene contenido extraído para traducir.'}, status=400)
+
+        result = translate_text(
+            document.extracted_content, target_language, source_language)
+
+        if 'error' in result:
+            return Response(result, status=400)
+
+        # Guardar el resultado en el historial
+        TranslationHistory.objects.create(
+            original_document=document,
+            user=request.user,
+            source_language=result['detected_source_language'],
+            target_language=target_language,
+            translated_content=result['translated_text']
+        )
+
+        return Response(result, status=200)
+
+    # --- FIN DE NUEVAS ACCIONES ---
+
+
+# --- AÑADIR ESTE NUEVO VIEWSET AL FINAL DEL ARCHIVO ---
+class TranslationHistoryViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    UC-20: Vista para que un usuario pueda ver su historial de traducciones.
+    """
+    serializer_class = TranslationHistorySerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        # El usuario solo puede ver su propio historial
+        return TranslationHistory.objects.filter(user=self.request.user)

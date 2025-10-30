@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
-from .models import Profile, Folder, Document, Tag, DocumentPermission
+from api.models import Profile, Folder, Document, Tag, DocumentPermission
 
 # --- Personalización del Admin de Usuarios ---
 
