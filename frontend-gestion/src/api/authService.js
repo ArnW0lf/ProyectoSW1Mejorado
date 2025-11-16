@@ -27,11 +27,11 @@ export const login = async (username, password) => {
 // --- El resto de tus funciones (register, logout) ---
 
 // UC-01: Registro
-export const register = async (username, email, password, password2) => {
+export const register = async (username, email, password1, password2) => {
     const response = await apiClient.post('/auth/register/', {
         username,
         email,
-        password: password,
+        password1: password1, 
         password2,
     });
     return response.data;
@@ -39,13 +39,7 @@ export const register = async (username, email, password, password2) => {
 
 // UC-03: Cierre de sesión
 export const logout = async () => {
-  const token = localStorage.getItem('authToken');
-  await apiClient.post('/auth/logout/', null, {
-    headers: {
-      Authorization: `Token ${token}`,
-    },
-  });
-  localStorage.removeItem('authToken');
+  await apiClient.post('/auth/logout/');
 };
 
 /**
@@ -59,6 +53,65 @@ export const getUser = async () => {
         return response.data;
     } catch (error) {
         console.error('Error al obtener datos del usuario:', error);
+        throw error;
+    }
+};
+
+/**
+ * UC-07/08: Obtiene el perfil extendido del usuario.
+ */
+export const getProfile = async () => {
+    try {
+        const response = await apiClient.get('/profile/');
+        return response.data;
+    } catch (error) {
+        console.error('Error al obtener el perfil:', error);
+        throw error;
+    }
+};
+
+/**
+ * UC-07/08: Actualiza el perfil extendido del usuario.
+ */
+export const updateProfile = async (profileData) => {
+    try {
+        const response = await apiClient.patch('/profile/', profileData);
+        return response.data;
+    } catch (error) {
+        console.error('Error al actualizar el perfil:', error);
+        throw error;
+    }
+};
+
+/**
+ * UC-04: Solicitar reseteo de contraseña.
+ * Envía un email al usuario con un enlace de reseteo.
+ */
+export const requestPasswordReset = async (email) => {
+    try {
+        const response = await apiClient.post('/auth/password/reset/', { email });
+        return response.data;
+    } catch (error) {
+        console.error('Error al solicitar reseteo de contraseña:', error);
+        throw error;
+    }
+};
+
+/**
+ * UC-04: Confirmar nueva contraseña.
+ * Envía la nueva contraseña junto con el uid y token de la URL.
+ */
+export const confirmPasswordReset = async (new_password1, new_password2, uid, token) => {
+    try {
+        const response = await apiClient.post('/auth/password/reset/confirm/', {
+            new_password1,
+            new_password2,
+            uid,
+            token,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error al confirmar la nueva contraseña:', error);
         throw error;
     }
 };

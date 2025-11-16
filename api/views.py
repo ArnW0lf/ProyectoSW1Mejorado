@@ -17,6 +17,7 @@ from .serializers import ProfileSerializer, FolderSerializer, DocumentSerializer
 from .permissions import IsOwnerOrHasPermission
 from django.contrib.auth.models import User
 from .text_extractor import extract_text
+from django.shortcuts import redirect
 
 def test_endpoint(request):
     """
@@ -32,16 +33,26 @@ def test_endpoint(request):
 
 class CustomVerifyEmailView(VerifyEmailView):
     """
-    Vista personalizada para manejar la verificación de correo electrónico a través de GET.
-    Toma la clave de la URL y la procesa.
+    Vista personalizada para manejar la verificación de correo electrónico.
+    Toma la clave de la URL, la procesa y redirige al frontend.
     """
 
     def get(self, request, key, *args, **kwargs):
         self.kwargs['key'] = key
-        confirmation = self.get_object()
-        confirmation.confirm(self.request)
-        return Response({'detail': 'Correo electrónico verificado exitosamente.'}, status=200)
+        
+        # 2. Definir las URLs de redirección del frontend
+        frontend_url_success = 'http://localhost:5173/verify-email?success=true'
+        frontend_url_failure = 'http://localhost:5173/verify-email?success=false'
 
+        try:
+            confirmation = self.get_object()
+            confirmation.confirm(self.request)
+            # 3. Si tiene éxito, redirigir a la URL de éxito
+            return redirect(frontend_url_success)
+        except Exception as e:
+            # 4. Si falla (clave inválida, expirada, etc.), redirigir a la URL de fallo
+            print(f"Error al verificar correo: {e}") # Para depuración
+            return redirect(frontend_url_failure)
 
 class ProfileDetailView(generics.RetrieveUpdateAPIView):
     """

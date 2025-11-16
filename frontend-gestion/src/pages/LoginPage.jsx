@@ -11,6 +11,7 @@ import {
   Anchor,
   Center,
   Container,
+  Group,
 } from '@mantine/core';
 // 1. Importar el hook de notificaciones
 import { notifications } from '@mantine/notifications';
@@ -48,7 +49,7 @@ const LoginPage = () => {
           <Title order={2} ta="center" mb="lg">
             Iniciar Sesión
           </Title>
-          
+
           <form onSubmit={handleSubmit}>
             <TextInput
               label="Username"
@@ -65,8 +66,11 @@ const LoginPage = () => {
               required
               mt="md"
             />
-
-            {/* 4. Ya no necesitamos el componente Notification aquí */}
+            <Group justify="flex-end" mt="sm">
+              <Anchor component={Link} to="/password-reset" size="sm">
+                ¿Olvidaste tu contraseña?
+              </Anchor>
+            </Group>
 
             <Button fullWidth mt="xl" type="submit">
               Ingresar
