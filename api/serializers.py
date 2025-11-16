@@ -10,14 +10,25 @@ class ProfileSerializer(serializers.ModelSerializer):
         model = Profile
         fields = ['language_preference', 'subscription_plan', 'preferred_translation_api']
 
+class RecursiveFolderSerializer(serializers.Serializer):
+    """Un serializer simple para mostrar hijos de forma recursiva."""
+    def to_representation(self, value):
+        # Llama al serializer principal (FolderSerializer) para renderizar el hijo
+        serializer = self.parent.parent.__class__(value, context=self.context)
+        return serializer.data
 
 class FolderSerializer(serializers.ModelSerializer):
     """Serializer para el modelo Folder."""
     owner = serializers.ReadOnlyField(source='owner.username')
+    
+    # ¡ESTA ES LA LÍNEA CLAVE!
+    # Le dice a Django que use el serializer recursivo para el campo 'subfolders'
+    subfolders = RecursiveFolderSerializer(many=True, read_only=True)
 
     class Meta:
         model = Folder
-        fields = ['id', 'name', 'owner', 'parent', 'created_at']
+        # ¡AÑADIR 'subfolders' A LOS CAMPOS!
+        fields = ['id', 'name', 'owner', 'parent', 'created_at', 'subfolders']
 
 
 class DocumentSerializer(serializers.ModelSerializer):

@@ -47,3 +47,18 @@ export const logout = async () => {
   });
   localStorage.removeItem('authToken');
 };
+
+/**
+ * UC-06: Ver datos de usuario
+ * Obtiene los datos del usuario autenticado.
+ */
+export const getUser = async () => {
+    try {
+        // apiClient ya tiene el token inyectado por AuthContext
+        const response = await apiClient.get('/auth/user/');
+        return response.data;
+    } catch (error) {
+        console.error('Error al obtener datos del usuario:', error);
+        throw error;
+    }
+};
