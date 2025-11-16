@@ -16,6 +16,7 @@ from .models import Profile, Folder, Document, Tag, DocumentPermission
 from .serializers import ProfileSerializer, FolderSerializer, DocumentSerializer, TagSerializer, DocumentPermissionSerializer
 from .permissions import IsOwnerOrHasPermission
 from django.contrib.auth.models import User
+from .text_extractor import extract_text
 
 def test_endpoint(request):
     """
@@ -114,18 +115,15 @@ class DocumentViewSet(viewsets.ModelViewSet):
         # Asigna el usuario actual como propietario al subir un documento
         document = serializer.save(owner=self.request.user)
 
-        # --- INICIO DE LA MODIFICACIÓN ---
         # Después de crear el documento, intentamos extraer su contenido.
-        # Por ahora, solo soportamos archivos .txt
-        file_path = document.file.path
-        if file_path.lower().endswith('.txt'):
-            try:
-                with open(file_path, 'r', encoding='utf-8') as f:
-                    document.extracted_content = f.read()
+        try:
+            content = extract_text(document)
+            if content:
+                document.extracted_content = content
                 document.save()
-            except Exception as e:
-                # Opcional: registrar el error si la lectura falla
-                print(f"No se pudo leer el contenido del archivo {file_path}: {e}")
+        except Exception as e:
+            # Opcional: registrar el error si la extracción falla
+            print(f"No se pudo extraer el contenido del documento {document.id}: {e}")
         # --- FIN DE LA MODIFICACIÓN ---
     @action(detail=True, methods=['get'])
     def download(self, request, pk=None):
