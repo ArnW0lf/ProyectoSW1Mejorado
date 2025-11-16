@@ -232,3 +232,27 @@ export const assignTagsToDocument = async (documentId, tagIdList) => {
         throw error;
     }
 };
+
+/**
+ * UC-17/18: Traducir un documento completo.
+ * Llama a la API para traducir el 'extracted_content' del documento.
+ */
+export const translateDocument = async (documentId, targetLanguage, sourceLanguage = null) => {
+    try {
+        const payload = {
+            target_language: targetLanguage,
+        };
+        if (sourceLanguage) {
+            payload.source_language = sourceLanguage;
+        }
+        
+        const response = await apiClient.post(
+            `/documents/${documentId}/translate-document/`, 
+            payload
+        );
+        return response.data; // Devuelve { translated_text: "...", ... }
+    } catch (error) {
+        console.error('Error al traducir el documento:', error);
+        throw error;
+    }
+};
