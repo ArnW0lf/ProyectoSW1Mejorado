@@ -7,7 +7,11 @@ import RegisterPage from './pages/RegisterPage';
 import HomePage from './pages/HomePage';
 import ProtectedRoute from './components/ProtectedRoute';
 import Navbar from './components/Navbar';
-import Sidebar from './components/Sidebar'; // 2. Importar el nuevo Sidebar
+import Sidebar from './components/Sidebar';
+import ProfilePage from './pages/ProfilePage';
+import PasswordResetRequestPage from './pages/PasswordResetRequestPage';
+import PasswordResetConfirmPage from './pages/PasswordResetConfirmPage';
+import EmailVerifyPage from './pages/EmailVerifyPage';
 
 function App() {
   const { isAuthenticated } = useAuth(); // 3. Obtener estado de autenticación
@@ -39,6 +43,10 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           
+          <Route path="/password-reset" element={<PasswordResetRequestPage />} />
+          <Route path="/password-reset/confirm" element={<PasswordResetConfirmPage />} />
+          <Route path="/verify-email" element={<EmailVerifyPage />} />
+
           <Route
             path="/"
             element={
@@ -47,6 +55,11 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route 
+            path="/profile"
+            element={<ProtectedRoute><ProfilePage /></ProtectedRoute>}
+          />
+  
         </Routes>
       </AppShell.Main>
     </AppShell>

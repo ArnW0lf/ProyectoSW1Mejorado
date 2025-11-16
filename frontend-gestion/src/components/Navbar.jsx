@@ -29,9 +29,16 @@ const Navbar = () => {
             // --- ¡AQUÍ ESTÁ LA CORRECCIÓN! ---
             // 3. Renderizar el nombre del usuario si existe
             <>
-              <Text c="rgba(255, 255, 255, 1)" td="none">
-                Hola, {user ? user.username : 'Usuario'}
-              </Text>
+              <Anchor 
+                component={Link} 
+                to="/profile"  // Enlace a la página de perfil
+                c="var(--mantine-color-text)" // Usar color de texto del tema
+                td="none"
+              >
+                <Text>
+                  Hola, {user ? user.username : 'Usuario'}
+                </Text>
+              </Anchor>
               <Button color="red" onClick={handleLogout}>
                 Cerrar Sesión
               </Button>
