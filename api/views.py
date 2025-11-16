@@ -15,7 +15,7 @@ from dj_rest_auth.registration.views import VerifyEmailView
 from .models import Profile, Folder, Document, Tag, DocumentPermission
 from .serializers import ProfileSerializer, FolderSerializer, DocumentSerializer, TagSerializer, DocumentPermissionSerializer
 from .permissions import IsOwnerOrHasPermission
-
+from django.contrib.auth.models import User
 
 def test_endpoint(request):
     """
@@ -63,12 +63,22 @@ class FolderViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        # Un usuario solo puede ver sus propias carpetas
-        return self.request.user.folders.all()
+        # Correcto: solo devuelve las carpetas raíz
+        return self.request.user.folders.filter(parent=None)
 
     def perform_create(self, serializer):
-        # Asigna el usuario actual como propietario al crear una carpeta
+        # Correcto: solo una definición
         serializer.save(owner=self.request.user)
+
+    @action(detail=False, methods=['get'], url_path='list-all')
+    def list_all(self, request):
+        """
+        Devuelve una lista plana de TODAS las carpetas del usuario.
+        """
+        # Correcto: solo una definición
+        queryset = self.request.user.folders.all()
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
 
 class TagViewSet(viewsets.ModelViewSet):
@@ -90,10 +100,6 @@ class DocumentViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        # Un usuario puede ver documentos si:
-        # 1. Es el propietario (owner=user)
-        # O
-        # 2. Tiene un permiso explícito en el documento (permissions__user=user)
         return Document.objects.filter(
             Q(owner=user) | Q(permissions__user=user)
         ).distinct()
@@ -102,7 +108,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, SearchFilter]
     # Permite buscar por nombre de archivo y nombre de etiqueta
     search_fields = ['file', 'tags__name', 'extracted_content']
-    filterset_fields = ['tags']  # Permite filtrar por el ID de la etiqueta
+    filterset_fields = ['tags', 'folder']
 
     def perform_create(self, serializer):
         # Asigna el usuario actual como propietario al subir un documento
@@ -133,32 +139,40 @@ class DocumentViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'], url_path='share')
     def share(self, request, pk=None):
         """
-        Comparte un documento con otro usuario.
+        Comparte un documento con otro usuario por su email.
         """
         document = self.get_object()
 
-        # Solo el propietario del documento puede compartirlo
         if document.owner != request.user:
             return Response({'detail': 'No tienes permiso para compartir este documento.'}, status=403)
 
-        serializer = DocumentPermissionSerializer(data=request.data)
-        if serializer.is_valid():
-            user_id = serializer.validated_data['user_id']
-            permission_level = serializer.validated_data['permission_level']
+        # --- INICIO DE LA MODIFICACIÓN ---
+        # Leemos los datos directamente desde request.data
+        email = request.data.get('email')
+        permission_level = request.data.get('permission_level')
 
-            # Evita que el propietario se comparta el documento a sí mismo
-            if document.owner.id == user_id:
-                return Response({'detail': 'No puedes compartir un documento contigo mismo.'}, status=400)
+        if not email or not permission_level:
+            return Response({'detail': 'Se requieren "email" y "permission_level".'}, status=400)
 
-            # Crea o actualiza el permiso
-            permission, created = DocumentPermission.objects.update_or_create(
-                document=document,
-                user_id=user_id,
-                defaults={'permission_level': permission_level}
-            )
-            return Response({'detail': f'Documento compartido con el usuario {user_id} con permiso de {permission_level}.'}, status=200)
-        return Response(serializer.errors, status=400)
+        # Buscamos al usuario por su email
+        try:
+            user_to_share_with = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response({'detail': f'No se encontró ningún usuario con el email {email}.'}, status=404)
+        
+        # Evita que el propietario se comparta a sí mismo
+        if document.owner == user_to_share_with:
+            return Response({'detail': 'No puedes compartir un documento contigo mismo.'}, status=400)
 
+        # Crea o actualiza el permiso
+        permission, created = DocumentPermission.objects.update_or_create(
+            document=document,
+            user=user_to_share_with, # Usamos el objeto de usuario encontrado
+            defaults={'permission_level': permission_level}
+        )
+        
+        status_text = "actualizado" if not created else "creado"
+        return Response({'detail': f'Permiso {status_text} para {email} con nivel de {permission_level}.'}, status=200)
     # --- INICIO DE NUEVAS ACCIONES (AÑADIR ESTO DENTRO DE DocumentViewSet) ---
 
     @action(detail=True, methods=['post'], url_path='translate-text')

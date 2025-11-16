@@ -219,8 +219,8 @@ Authorization: Token TU_TOKEN_DE_ACCESO
 - **Ejemplo (Body):**
 ```json
 {
-    "user_id": 2,
-    "permission_level": "view"
+    "email": "testuser2@example.com",
+    "permission_level": "edit"
 }
 ```
 
