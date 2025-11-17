@@ -26,6 +26,8 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.units import inch
 
+from .gemini_service import GeminiAssistant
+from rest_framework.decorators import api_view, permission_classes
 
 def test_endpoint(request):
     """
@@ -38,6 +40,24 @@ def test_endpoint(request):
         }
         return JsonResponse(data)
 
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def ai_assistant(request):
+    """
+    Endpoint para procesar comandos de IA
+    """
+    prompt = request.data.get('prompt')
+    
+    if not prompt:
+        return Response({'error': 'El prompt es requerido'}, status=400)
+    
+    try:
+        assistant = GeminiAssistant(request.user)
+        result = assistant.process_command(prompt)
+        return Response(result, status=200)
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)
 
 class CustomVerifyEmailView(VerifyEmailView):
     """

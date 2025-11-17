@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Mapa Conceptual - Clase 2: Integración con Gemini</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px;
+            margin: 0;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 50px;
+            font-size: 2.5em;
+        }
+        .mindmap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 40px;
+        }
+        .central {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 50px;
+            border-radius: 20px;
+            font-size: 1.8em;
+            font-weight: bold;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+            max-width: 400px;
+        }
+        .branches {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            width: 100%;
+            margin-top: 30px;
+        }
+        .branch {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            border-left: 5px solid #667eea;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .branch-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        .subconcept {
+            background: white;
+            padding: 12px 18px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border-left: 3px solid #764ba2;
+            font-size: 1em;
+            color: #2c3e50;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Clase 2: Integración con Gemini</h1>
+        <div class="mindmap">
+            <div class="central">Integración de Noticias con Gemini para Redes Sociales</div>
+            <div class="branches">
+                <div class="branch">
+                    <div class="branch-title">Configurar Cliente Gemini (llm_service.py)</div>
+                    <div class="subconcept">Instalar python-dotenv</div>
+                    <div class="subconcept">Crear y configurar el archivo llm_service.py</div>
+                    <div class="subconcept">Configurar API Key</div>
+                    <div class="subconcept">Inicializar Modelo Gemini</div>
+                </div>
+                <div class="branch">
+                    <div class="branch-title">Diseñar Prompts (llm_service.py)</div>
+                    <div class="subconcept">Crear diccionario PROMPTS_POR_RED</div>
+                    <div class="subconcept">Prompts para Facebook (Tono, Formato, Hashtags, Emojis)</div>
+                    <div class="subconcept">Prompts para Instagram (Tono, Formato, Hashtags, Emojis, Imagen IA)</div>
+                </div>
+                <div class="branch">
+                    <div class="branch-title">Crear Función Adaptar Noticia</div>
+                    <div class="subconcept">Definir función adaptar_noticia(red_social, titulo, contenido)</div>
+                    <div class="subconcept">Obtener el prompt específico para la red social</div>
+                    <div class="subconcept">Enviar la petición a Gemini con el prompt y la información</div>
+                    <div class="subconcept">Manejar la respuesta de Gemini (formato JSON)</div>
+                </div>
+                <div class="branch">
+                    <div class="branch-title">Integrar con el Backend (app.py)</div>
+                    <div class="subconcept">Importar llm_service en app.py</div>
+                    <div class="subconcept">Crear endpoint /adaptar_noticia</div>
+                    <div class="subconcept">Recibir red_social, titulo, contenido como parámetros</div>
+                    <div class="subconcept">Llamar a adaptar_noticia y devolver la respuesta</div>
+                </div>
+                <div class="branch">
+                    <div class="branch-title">Crear el Frontend (Interfaz)</div>
+                    <div class="subconcept">Formulario para Título y Contenido</div>
+                    <div class="subconcept">Selección de Red Social (Facebook, Instagram)</div>
+                    <div class="subconcept">Botón de "Adaptar"</div>
+                    <div class="subconcept">Mostrar resultado adaptado en la página</div>
+                </div>
+                <div class="branch">
+                    <div class="branch-title">Probar y Ajustar</div>
+                    <div class="subconcept">Realizar pruebas con diferentes noticias</div>
+                    <div class="subconcept">Ajustar prompts para mejorar la calidad de las adaptaciones</div>
+                    <div class="subconcept">Considerar manejo de errores y excepciones</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

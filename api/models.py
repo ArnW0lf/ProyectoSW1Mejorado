@@ -74,6 +74,7 @@ class Document(models.Model):
     # UC-15: Campo para el contenido extraído para búsqueda
     extracted_content = models.TextField(blank=True)
     uploaded_at = models.DateTimeField(auto_now_add=True)
+    modified_at = models.DateTimeField(auto_now=True)
     tags = models.ManyToManyField(
         'Tag', blank=True, related_name='documents')
 
