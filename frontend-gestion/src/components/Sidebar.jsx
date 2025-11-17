@@ -8,26 +8,29 @@ import CreateFolderModal from './CreateFolderModal';
 import CreateTagModal from './CreateTagModal';
 
 const Sidebar = () => {
-  const { setSelectedFolderId } = useAuth();
+  // --- INICIO DE LA MODIFICACIÓN ---
+  // 1. Obtenemos el trigger global y la función de refresco
+  const { setSelectedFolderId, globalRefetch, globalRefetchTrigger } = useAuth();
   
-  const [refetchFolders, setRefetchFolders] = useState(0);
+  // 2. Ya no necesitamos los triggers locales
+  // const [refetchFolders, setRefetchFolders] = useState(0);
+  // const [refetchTags, setRefetchTags] = useState(0);
+  // --- FIN DE LA MODIFICACIÓN ---
+  
   const [folderModalOpened, setFolderModalOpened] = useState(false);
-
-  const [refetchTags, setRefetchTags] = useState(0);
   const [tagModalOpened, setTagModalOpened] = useState(false);
 
+  // 3. Hacemos que los modales de la sidebar también usen el refresco global
   const handleFolderSuccess = () => {
-    setRefetchFolders(count => count + 1);
+    globalRefetch(); // Llama al refresco global
     setFolderModalOpened(false);
   };
 
-  // 2. Esta función se llamará para CUALQUIER éxito de CRUD de etiquetas
   const handleTagSuccess = () => {
-    setRefetchTags(count => count + 1); 
+    globalRefetch(); // Llama al refresco global
     setTagModalOpened(false); 
   };
   
-
   return (
     <>
       <Group justify="space-between" mb="sm">
@@ -39,7 +42,8 @@ const Sidebar = () => {
       
       <FolderTree 
         onFolderSelect={setSelectedFolderId} 
-        refetchTrigger={refetchFolders}
+        // 4. Pasamos el trigger GLOBAL a FolderTree
+        refetchTrigger={globalRefetchTrigger}
         onRefetch={handleFolderSuccess}
       />
 
@@ -51,7 +55,8 @@ const Sidebar = () => {
       </Group>
       
       <TagList 
-        refetchTrigger={refetchTags} 
+        // 5. Pasamos el trigger GLOBAL a TagList
+        refetchTrigger={globalRefetchTrigger} 
         onRefetch={handleTagSuccess}
       />
       

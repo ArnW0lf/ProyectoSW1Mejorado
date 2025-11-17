@@ -1,19 +1,22 @@
 import React, { useState, useEffect } from 'react';
+// 1. Importar Menu, ActionIcon, y los nuevos iconos
 import { Chip, Group, Loader, Text, Menu, ActionIcon } from '@mantine/core';
 import { IconDotsVertical, IconPencil, IconTrash } from '@tabler/icons-react';
 import { useAuth } from '../context/AuthContext';
+// 2. Importar 'deleteTag'
 import { getTags, deleteTag } from '../api/documentService';
 import { notifications } from '@mantine/notifications';
+// 3. Importar el modal de renombrar
 import RenameTagModal from './RenameTagModal';
 
-// 1. Aceptar 'onRefetch'
+// Aceptar 'onRefetch'
 const TagList = ({ refetchTrigger, onRefetch }) => {
   const [tags, setTags] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { loading: authLoading, selectedTagId, setSelectedTagId } = useAuth();
   
-  // 2. Estado para el modal de renombrar
+  // 4. Estado para el modal de renombrar
   // Guardamos LA ETIQUETA que se está editando
   const [editingTag, setEditingTag] = useState(null); 
 
@@ -34,12 +37,16 @@ const TagList = ({ refetchTrigger, onRefetch }) => {
     loadTags();
   }, [authLoading, refetchTrigger]); 
 
-  // 3. Función de eliminar
+  // 5. Función de eliminar
   const handleDelete = async (tag) => {
     if (window.confirm(`¿Seguro que quieres eliminar la etiqueta "${tag.name}"?`)) {
       try {
         await deleteTag(tag.id);
         notifications.show({ title: 'Éxito', message: 'Etiqueta eliminada.', color: 'green' });
+        // Si eliminamos la etiqueta que estaba seleccionada, reseteamos el filtro
+        if (selectedTagId === tag.id) {
+          setSelectedTagId(null);
+        }
         onRefetch(); // Recargar la lista
       } catch (err) {
         notifications.show({ title: 'Error', message: 'No se pudo eliminar la etiqueta.', color: 'red' });
@@ -47,31 +54,34 @@ const TagList = ({ refetchTrigger, onRefetch }) => {
     }
   };
 
+  // 6. Función de éxito para el modal de renombrar
   const handleRenameSuccess = () => {
     setEditingTag(null); // Cierra el modal
     onRefetch(); // Recarga la lista
   };
 
-  // ... (tus returns para loading, error, y 'no tienes etiquetas') ...
   if (authLoading || loading) return <Loader size="xs" />;
   if (error) return <Text c="red" size="sm">{error}</Text>;
   if (tags.length === 0) return <Text size="sm">No tienes etiquetas.</Text>;
 
   return (
     <>
-      <Group gap="xs">
-        {/* 3. AÑADIR UN BOTÓN "VER TODAS" */}
+      <Group gap="xs" style={{ userSelect: 'none' }}>
+        {/* Botón "Todas" */}
         <Chip
           checked={selectedTagId === null}
-          onChange={() => setSelectedTagId(null)} // Pone el filtro en null
+          onChange={() => setSelectedTagId(null)}
           variant="filled"
         >
           Todas
         </Chip>
         
+        {/* 7. Mapear las etiquetas en un nuevo componente de Grupo */}
         {tags.map((tag) => (
-          <Group key={tag.id} gap={4} wrap="nowrap" 
-            // 4. APLICAR ESTILOS Y ONCLICK AL GRUPO
+          <Group 
+            key={tag.id} 
+            gap={4} 
+            wrap="nowrap" 
             onClick={() => setSelectedTagId(tag.id)}
             style={{ 
               paddingLeft: '12px',
@@ -79,15 +89,17 @@ const TagList = ({ refetchTrigger, onRefetch }) => {
               borderRadius: '16px',
               border: '1px solid var(--mantine-color-dark-4)',
               cursor: 'pointer',
-              // 5. RESALTAR SI ESTÁ ACTIVO
+              // Resaltar si está activo
               backgroundColor: selectedTagId === tag.id ? 'var(--mantine-color-blue-8)' : 'transparent'
             }}
           >
-            <Text size="sm">{tag.name}</Text>
+            {/* El nombre de la etiqueta */}
+            <Text size="sm" style={{ whiteSpace: 'nowrap' }}>{tag.name}</Text>
             
+            {/* 8. El Menú de "..." */}
             <Menu shadow="md" width={200} withinPortal>
               <Menu.Target>
-                {/* 6. Detener la propagación del clic */}
+                {/* 9. Detener la propagación del clic */}
                 <ActionIcon 
                   variant="subtle" 
                   size="sm" 
@@ -97,20 +109,44 @@ const TagList = ({ refetchTrigger, onRefetch }) => {
                   <IconDotsVertical size={14} />
                 </ActionIcon>
               </Menu.Target>
+              
               <Menu.Dropdown>
-                {/* ... (tus Menu.Items) ... */}
+                <Menu.Label>Acciones</Menu.Label>
+                
+                {/* 10. Botón de Renombrar (Editar) */}
+                <Menu.Item 
+                  leftSection={<IconPencil size={14} />}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setEditingTag(tag);
+                  }}
+                >
+                  Renombrar
+                </Menu.Item>
+                
+                {/* 11. Botón de Eliminar */}
+                <Menu.Item 
+                  color="red" 
+                  leftSection={<IconTrash size={14} />}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(tag);
+                  }}
+                >
+                  Eliminar
+                </Menu.Item>
               </Menu.Dropdown>
             </Menu>
           </Group>
         ))}
       </Group>
 
-      {/* 6. El modal de renombrar (oculto) */}
+      {/* 12. El modal de renombrar (oculto) */}
       <RenameTagModal 
         opened={!!editingTag} // El modal se abre si 'editingTag' no es null
         onClose={() => setEditingTag(null)}
         onSuccess={handleRenameSuccess}
-        tag={editingTag}
+        tag={editingTag} // Pasamos la etiqueta que se está editando
       />
     </>
   );

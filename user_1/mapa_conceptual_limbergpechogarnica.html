@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa Conceptual: Investigación y Feasibility Study</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            background-color: #f4f4f4;
+        }
+
+        #mapa-conceptual {
+            position: relative;
+            width: 80%;
+            padding: 20px;
+        }
+
+        .concepto-principal {
+            position: relative;
+            background-color: #3498db; /* Azul */
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 200px;
+            margin: 20px auto;
+
+        }
+
+        .subconcepto {
+            position: relative;
+            background-color: #e74c3c; /* Rojo */
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: left;
+            margin: 15px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            width: 180px;
+        }
+
+       .subconcepto p {
+            margin: 5px 0;
+            font-size: small;
+        }
+
+        .flecha {
+            position: absolute;
+            background: black; /* Cambiado a negro para mejor visibilidad */
+            height: 2px;
+            z-index: -1;
+        }
+        
+        .flecha::after {
+            content: '';
+            position: absolute;
+            top: -5px;
+            right: -10px;
+            border-style: solid;
+            border-width: 7px 0 7px 10px;
+            border-color: transparent transparent transparent black; /* Cambiado a negro */
+        }
+
+
+        /* Posicionamiento específico para las flechas y subconceptos */
+        #investigacion-apis {
+            margin-top: 50px;
+        }
+
+        #meta {
+            position: absolute;
+            top: 150px;
+            left: 50px;
+        }
+
+        #instagram {
+            position: absolute;
+            top: 300px;
+            left: 50px;
+        }
+
+        #facebook {
+            position: absolute;
+            top: 450px;
+            left: 50px;
+        }
+
+        #linkedin {
+            position: absolute;
+            top: 600px;
+            left: 50px;
+        }
+        
+        #flecha-apis-meta {
+            top: 105px;
+            left: 50%;
+            width: 50px;
+        }
+    
+        #flecha-meta-instagram {
+            top: 255px;
+            left: 50%;
+            width: 50px;
+        }
+        
+        #flecha-meta-facebook {
+            top: 405px;
+            left: 50%;
+            width: 50px;
+        }
+
+        #flecha-apis-linkedin {
+            top: 555px;
+            left: 50%;
+            width: 50px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="mapa-conceptual">
+        <h1>Investigación y Feasibility Study</h1>
+
+        <div id="investigacion-apis" class="concepto-principal">Investigación de APIs</div>
+
+        <div id="flecha-apis-meta" class="flecha"></div>
+
+        <div id="meta" class="concepto-principal">Meta</div>
+
+            <div id="flecha-meta-instagram" class="flecha"></div>
+
+            <div id="instagram" class="subconcepto">
+                Instagram
+                <p>API Graph de Meta</p>
+                <p>App de Desarrollador</p>
+                <p>Cuenta Business vinculada a Facebook</p>
+                <p>OAuth 2.0 (instagram_content_publish)</p>
+            </div>
+
+            <div id="flecha-meta-facebook" class="flecha"></div>
+
+            <div id="facebook" class="subconcepto">
+                Facebook
+                <p>API Graph de Meta</p>
+                <p>App de Desarrollador</p>
+                <p>Página de Facebook</p>
+                <p>OAuth 2.0 (pages_manage_posts)</p>
+            </div>
+
+        <div id="flecha-apis-linkedin" class="flecha"></div>
+        
+        <div id="linkedin" class="concepto-principal">LinkedIn</div>
+
+            <div class="subconcepto">
+                Share API
+                <p>App de Desarrollador (Share on LinkedIn)</p>
+                <p>OAuth 2.0 (flujo de 3 pasos)</p>
+            </div>
+
+    </div>
+
+</body>
+</html>
