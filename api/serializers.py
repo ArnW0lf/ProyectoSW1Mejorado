@@ -44,10 +44,10 @@ class DocumentSerializer(serializers.ModelSerializer):
                   'preview_url', 'uploaded_at', 'tags',
                   'extracted_content', 
                   'permission_level', 
-                  'is_shared']
+                  'is_shared','modified_at']
         read_only_fields = [
             'uploaded_at', 'owner', 'file_url', 
-            'preview_url', 'permission_level', 'is_shared'
+            'preview_url', 'permission_level', 'is_shared','modified_at'
         ]
 
     # --- INICIO DE LAS FUNCIONES QUE FALTABAN ---

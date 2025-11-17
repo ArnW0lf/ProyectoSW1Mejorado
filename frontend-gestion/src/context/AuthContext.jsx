@@ -1,5 +1,4 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-// 1. Importar la nueva función
 import { login as apiLogin, logout as apiLogout, register as apiRegister, getUser } from '../api/authService';
 import apiClient from '../api/axiosConfig';
 
@@ -7,21 +6,30 @@ const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [authToken, setAuthToken] = useState(localStorage.getItem('authToken'));
-  const [user, setUser] = useState(null); // <-- Este estado ahora se llenará
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedFolderId, setSelectedFolderId] = useState(null);
   const [selectedTagId, setSelectedTagId] = useState(null);
+
+  // --- INICIO DE LA MODIFICACIÓN ---
+  // 1. Añadimos un trigger global
+  const [globalRefetchTrigger, setGlobalRefetchTrigger] = useState(0);
+
+  // 2. Creamos una función para llamarlo desde cualquier parte
+  const globalRefetch = () => {
+    setGlobalRefetchTrigger((count) => count + 1);
+  };
+  // --- FIN DE LA MODIFICACIÓN ---
+
 
   useEffect(() => {
     const loadUser = async () => {
       if (authToken) {
         apiClient.defaults.headers.common['Authorization'] = `Token ${authToken}`;
         try {
-          // 2. ¡Llamar a la API para obtener los datos del usuario!
           const userData = await getUser();
-          setUser(userData); // 3. Guardar el usuario en el estado
+          setUser(userData);
         } catch (e) {
-          // Si el token es inválido (ej. expiró), cerramos sesión
           setAuthToken(null);
           localStorage.removeItem('authToken');
           setUser(null);
@@ -32,7 +40,7 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
     };
     loadUser();
-  }, [authToken]); // Se ejecuta cada vez que el token cambia
+  }, [authToken]);
 
   const login = async (username, password) => {
     const data = await apiLogin(username, password);
@@ -40,7 +48,6 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('authToken', token);
     apiClient.defaults.headers.common['Authorization'] = `Token ${token}`;
     
-    // 4. Obtener datos del usuario INMEDIATAMENTE después de iniciar sesión
     try {
       const userData = await getUser();
       setUser(userData);
@@ -55,12 +62,12 @@ export const AuthProvider = ({ children }) => {
     await apiLogout();
     setAuthToken(null);
     localStorage.removeItem('authToken');
-    setUser(null); // 5. Limpiar el usuario al cerrar sesión
+    setUser(null);
   };
 
   const value = {
     authToken,
-    user, // <-- 'user' ahora tendrá datos
+    user,
     login,
     logout,
     loading,
@@ -70,6 +77,12 @@ export const AuthProvider = ({ children }) => {
     setSelectedFolderId,
     selectedTagId,
     setSelectedTagId,
+    
+    // --- INICIO DE LA MODIFICACIÓN ---
+    // 3. Exponemos el trigger y la función
+    globalRefetchTrigger,
+    globalRefetch,
+    // --- FIN DE LA MODIFICACIÓN ---
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

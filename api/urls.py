@@ -2,7 +2,7 @@
 
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import test_endpoint, ProfileDetailView, FolderViewSet, DocumentViewSet, TagViewSet, TranslationHistoryViewSet
+from .views import test_endpoint, ProfileDetailView, FolderViewSet, DocumentViewSet, TagViewSet, TranslationHistoryViewSet, ai_assistant
 
 # Creamos un router y registramos nuestros viewsets
 router = DefaultRouter()
@@ -14,6 +14,7 @@ router.register(r'translation-history', TranslationHistoryViewSet, basename='tra
 urlpatterns = [
     path('test/', test_endpoint, name='test_endpoint'),
     path('profile/', ProfileDetailView.as_view(), name='profile-detail'),
+    path('ai-assistant/', ai_assistant, name='ai-assistant'),
     # Las URLs para la API de documentos y carpetas son generadas por el router
     path('', include(router.urls)),
 ]
