@@ -256,3 +256,32 @@ export const translateDocument = async (documentId, targetLanguage, sourceLangua
         throw error;
     }
 };
+
+
+/**
+ * Obtiene los detalles completos de un solo documento (incl. contenido)
+ */
+export const getDocumentDetails = async (documentId) => {
+  try {
+    const response = await apiClient.get(`/documents/${documentId}/`);
+    return response.data;
+  } catch (error) {
+    console.error('Error al obtener los detalles del documento:', error);
+    throw error;
+  }
+};
+
+/**
+ * Actualiza el contenido extraído de un documento
+ */
+export const updateDocumentContent = async (documentId, newContent) => {
+  try {
+    const response = await apiClient.patch(`/documents/${documentId}/`, {
+      extracted_content: newContent,
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error al actualizar el documento:', error);
+    throw error;
+  }
+};

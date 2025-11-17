@@ -12,6 +12,7 @@ import ProfilePage from './pages/ProfilePage';
 import PasswordResetRequestPage from './pages/PasswordResetRequestPage';
 import PasswordResetConfirmPage from './pages/PasswordResetConfirmPage';
 import EmailVerifyPage from './pages/EmailVerifyPage';
+import DocumentViewPage from './pages/DocumentViewPage';
 
 function App() {
   const { isAuthenticated } = useAuth(); // 3. Obtener estado de autenticación
@@ -59,6 +60,10 @@ function App() {
             path="/profile"
             element={<ProtectedRoute><ProfilePage /></ProtectedRoute>}
           />
+          <Route 
+    path="/documento/:id"
+    element={<ProtectedRoute><DocumentViewPage /></ProtectedRoute>}
+  />
   
         </Routes>
       </AppShell.Main>
