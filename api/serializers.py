@@ -30,28 +30,67 @@ class FolderSerializer(serializers.ModelSerializer):
         # ¡AÑADIR 'subfolders' A LOS CAMPOS!
         fields = ['id', 'name', 'owner', 'parent', 'created_at', 'subfolders']
 
-
 class DocumentSerializer(serializers.ModelSerializer):
     """Serializer para el modelo Document."""
     owner = serializers.ReadOnlyField(source='owner.username')
     file_url = serializers.SerializerMethodField(read_only=True)
     preview_url = serializers.SerializerMethodField(read_only=True)
+    permission_level = serializers.SerializerMethodField()
+    is_shared = serializers.SerializerMethodField()
 
     class Meta:
         model = Document
-        # Ocultamos 'extracted_content' de la respuesta de la API
         fields = ['id', 'owner', 'folder', 'file', 'file_url',
-                  'preview_url', 'uploaded_at', 'tags']
-        read_only_fields = ['uploaded_at']
+                  'preview_url', 'uploaded_at', 'tags',
+                  'extracted_content', 
+                  'permission_level', 
+                  'is_shared']
+        read_only_fields = [
+            'uploaded_at', 'owner', 'file_url', 
+            'preview_url', 'permission_level', 'is_shared'
+        ]
 
+    # --- INICIO DE LAS FUNCIONES QUE FALTABAN ---
     def get_file_url(self, obj):
-        return self.context['request'].build_absolute_uri(obj.file.url)
-
-    def get_preview_url(self, obj):
-        if obj.preview:
-            return self.context['request'].build_absolute_uri(obj.preview.url)
+        request = self.context.get('request', None)
+        if request and obj.file:
+            return request.build_absolute_uri(obj.file.url)
         return None
 
+    def get_preview_url(self, obj):
+        request = self.context.get('request', None)
+        if request and obj.preview:
+            return request.build_absolute_uri(obj.preview.url)
+        return None
+    # --- FIN DE LAS FUNCIONES QUE FALTABAN ---
+
+    def get_permission_level(self, obj):
+        request = self.context.get('request', None)
+        if not request or not request.user.is_authenticated:
+            return None
+        if obj.owner == request.user:
+            return "PROPIETARIO"
+        try:
+            permission = DocumentPermission.objects.get(document=obj, user=request.user)
+            if permission.permission_level == 'edit':
+                return "EDITOR"
+            else:
+                return "LECTOR"
+        except DocumentPermission.DoesNotExist:
+            return None
+
+    def get_is_shared(self, obj):
+        """
+        Comprueba si el propietario ha compartido este documento con alguien.
+        """
+        request = self.context.get('request', None)
+        if not request or not request.user.is_authenticated:
+            return False
+        
+        if obj.owner == request.user:
+            return DocumentPermission.objects.filter(document=obj).exists()
+        
+        return False
 
 class TagSerializer(serializers.ModelSerializer):
     """Serializer para el modelo Tag."""
