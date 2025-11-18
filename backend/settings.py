@@ -38,6 +38,8 @@ ALLOWED_HOSTS = os.environ.get(
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
+    'channels',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -46,6 +48,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'corsheaders',
     'api',
+    'chat',
     # Apps de terceros para la API y autenticación
     'rest_framework',
     'rest_framework.authtoken',
@@ -87,8 +90,8 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'backend.wsgi.application'
-
+# WSGI_APPLICATION = 'backend.wsgi.application'
+ASGI_APPLICATION = 'backend.asgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
@@ -96,9 +99,9 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('DB_NAME', 'backend_db'),
-        'USER': os.environ.get('DB_USER', 'backend_user'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', 'mi_password_segura'),
+        'NAME': os.environ.get('DB_NAME', 'traductordb'),
+        'USER': os.environ.get('DB_USER', 'postgres'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', '123456789'),
         'HOST': os.environ.get('DB_HOST', 'localhost'),
         'PORT': os.environ.get('DB_PORT', '5432'),
     }
@@ -179,3 +182,9 @@ CORS_ALLOWED_ORIGINS = [
 ]
 # Opcional: Permite que el frontend envíe cookies (necesario para sesiones)
 CORS_ALLOW_CREDENTIALS = True
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    },
+}

@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Title, Box, Group, TextInput, Button } from '@mantine/core';
 import { IconSearch, IconSparkles } from '@tabler/icons-react';
 import DocumentList from '../components/DocumentList';
 import UploadButton from '../components/UploadButton';
 import AIAssistantModal from '../components/AIAssistantModal';
 import { useAuth } from '../context/AuthContext';
+import WebSocketInstance from '../api/socketService'; // Importamos el servicio que acabamos de arreglar
 
 const HomePage = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -43,7 +44,6 @@ const HomePage = () => {
 
       <DocumentList
         searchQuery={searchQuery}
-        // 4. Pasamos el trigger GLOBAL a DocumentList
         refetchTrigger={globalRefetchTrigger} 
         onDataChange={refetchData}
         selectedFolderId={selectedFolderId}
@@ -53,7 +53,7 @@ const HomePage = () => {
       <AIAssistantModal
         opened={aiModalOpened}
         onClose={() => setAiModalOpened(false)}
-        onSuccess={refetchData} // Esto ahora llama al refresco global
+        onSuccess={refetchData}
       />
     </Box>
   );
