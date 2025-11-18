@@ -1,7 +1,7 @@
 import { AppShell } from '@mantine/core';
 import { Routes, Route } from 'react-router-dom';
 import { useAuth } from './context/AuthContext'; // 1. Importar el hook
-
+import ChatWindow from './components/ChatWindow';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import HomePage from './pages/HomePage';
@@ -61,11 +61,14 @@ function App() {
             element={<ProtectedRoute><ProfilePage /></ProtectedRoute>}
           />
           <Route 
-    path="/documento/:id"
-    element={<ProtectedRoute><DocumentViewPage /></ProtectedRoute>}
-  />
-  
+            path="/documento/:id"
+            element={<ProtectedRoute><DocumentViewPage /></ProtectedRoute>}
+          />
         </Routes>
+        {isAuthenticated && (
+          <ChatWindow roomName="SalaConferencia1" /> 
+          // Nota: Hardcodeamos el nombre de la sala por ahora para probar
+        )}
       </AppShell.Main>
     </AppShell>
   );

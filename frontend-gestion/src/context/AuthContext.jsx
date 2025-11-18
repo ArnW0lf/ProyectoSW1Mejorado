@@ -11,15 +11,12 @@ export const AuthProvider = ({ children }) => {
   const [selectedFolderId, setSelectedFolderId] = useState(null);
   const [selectedTagId, setSelectedTagId] = useState(null);
 
-  // --- INICIO DE LA MODIFICACIÓN ---
-  // 1. Añadimos un trigger global
+
   const [globalRefetchTrigger, setGlobalRefetchTrigger] = useState(0);
 
-  // 2. Creamos una función para llamarlo desde cualquier parte
   const globalRefetch = () => {
     setGlobalRefetchTrigger((count) => count + 1);
   };
-  // --- FIN DE LA MODIFICACIÓN ---
 
 
   useEffect(() => {
@@ -77,12 +74,8 @@ export const AuthProvider = ({ children }) => {
     setSelectedFolderId,
     selectedTagId,
     setSelectedTagId,
-    
-    // --- INICIO DE LA MODIFICACIÓN ---
-    // 3. Exponemos el trigger y la función
     globalRefetchTrigger,
     globalRefetch,
-    // --- FIN DE LA MODIFICACIÓN ---
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
