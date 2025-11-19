@@ -1,39 +1,50 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  Paper, TextInput, ActionIcon, ScrollArea, Text, Box, Group, Avatar, Transition 
-} from '@mantine/core';
-import { IconSend, IconX, IconMessageChatbot } from '@tabler/icons-react';
+import { Paper, TextInput, ActionIcon, ScrollArea, Text, Box, Group, Avatar, Transition } from '@mantine/core';
+// 1. Añadimos los iconos del micrófono
+import { IconSend, IconX, IconMessageChatbot, IconMicrophone, IconMicrophoneOff } from '@tabler/icons-react';
 import WebSocketInstance from '../api/socketService';
 import { useAuth } from '../context/AuthContext';
+import useSpeechRecognition from '../hooks/useSpeechRecognition';
 
-const ChatWindow = ({ roomName = "general" }) => { // Por defecto sala "general"
+const ChatWindow = ({ roomName = "general" }) => { 
   const [opened, setOpened] = useState(false);
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState('');
   const viewport = useRef(null);
   const { user } = useAuth();
 
+  // 2. Usamos el Hook de Reconocimiento de Voz
+  const { isListening, transcript, startListening, stopListening, hasSupport } = useSpeechRecognition();
+
+  // 3. Efecto Mágico: Cuando el navegador detecta texto, lo pone en el input
   useEffect(() => {
-    // 1. Conectar al abrir el chat
+    if (transcript) {
+      // Concatenamos el texto hablado al texto existente (con un espacio si hace falta)
+      setInputValue((prev) => {
+        const spacer = prev.length > 0 && !prev.endsWith(' ') ? ' ' : '';
+        return prev + spacer + transcript;
+      });
+    }
+  }, [transcript]);
+
+  useEffect(() => {
     if (opened) {
       WebSocketInstance.connect(roomName);
       
-      // 2. Escuchar mensajes
       WebSocketInstance.addCallbacks((data) => {
         setMessages((prev) => [...prev, data]);
       });
     } else {
-      // Desconectar al cerrar (opcional, ahorra recursos)
       WebSocketInstance.disconnect();
+      // Si cierran el chat mientras graban, detenemos el micrófono
+      if (isListening) stopListening();
     }
     
-    // Limpieza
     return () => {
       if (opened) WebSocketInstance.disconnect();
     };
-  }, [opened, roomName]);
+  }, [opened, roomName]); // Eliminamos isListening de aquí para evitar reconexiones innecesarias
 
-  // Auto-scroll al último mensaje
   useEffect(() => {
     viewport.current?.scrollTo({ top: viewport.current.scrollHeight, behavior: 'smooth' });
   }, [messages]);
@@ -43,8 +54,6 @@ const ChatWindow = ({ roomName = "general" }) => { // Por defecto sala "general"
 
     const messageData = {
       message: inputValue,
-      // El backend ya sabe quiénes somos por el token, 
-      // pero enviamos el texto crudo para que él lo traduzca.
     };
 
     WebSocketInstance.sendMessage(messageData);
@@ -57,12 +66,11 @@ const ChatWindow = ({ roomName = "general" }) => { // Por defecto sala "general"
 
   return (
     <>
-      {/* Botón Flotante para abrir el chat */}
+      {/* Botón Flotante */}
       <div style={{ position: 'fixed', bottom: 20, right: 20, zIndex: 1000 }}>
         <Transition transition="scale" mounted={!opened}>
           {(styles) => (
             <ActionIcon 
-              // 1. MODIFICACIÓN: Fusionamos los estilos de transición con nuestra sombra manual
               style={{ 
                 ...styles, 
                 boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)' 
@@ -72,7 +80,6 @@ const ChatWindow = ({ roomName = "general" }) => { // Por defecto sala "general"
               color="violet" 
               variant="filled"
               onClick={() => setOpened(true)}
-              // 2. MODIFICACIÓN: Eliminamos la prop 'boxShadow="md"' que causaba el error
             >
               <IconMessageChatbot size={34} />
             </ActionIcon>
@@ -159,11 +166,26 @@ const ChatWindow = ({ roomName = "general" }) => { // Por defecto sala "general"
               })}
             </ScrollArea>
 
-            {/* Input */}
+            {/* Input Area Actualizada */}
             <Box p="md" style={{ borderTop: '1px solid #eee' }}>
               <Group gap="xs">
+                {/* 4. Botón de Micrófono (Solo si hay soporte) */}
+                {hasSupport && (
+                  <ActionIcon
+                    variant={isListening ? "filled" : "light"} 
+                    color={isListening ? "red" : "gray"}
+                    size="lg"
+                    onClick={isListening ? stopListening : startListening}
+                    title={isListening ? "Detener grabación" : "Hablar para escribir"}
+                    // Animación simple de "pulso" si está escuchando
+                    style={isListening ? { animation: 'pulse 2s infinite' } : {}}
+                  >
+                    {isListening ? <IconMicrophoneOff size={18} /> : <IconMicrophone size={18} />}
+                  </ActionIcon>
+                )}
+
                 <TextInput 
-                  placeholder="Escribe un mensaje..." 
+                  placeholder={isListening ? "Escuchando..." : "Escribe un mensaje..."}
                   style={{ flex: 1 }}
                   value={inputValue}
                   onChange={(e) => setInputValue(e.currentTarget.value)}
@@ -183,6 +205,15 @@ const ChatWindow = ({ roomName = "general" }) => { // Por defecto sala "general"
           </Paper>
         )}
       </Transition>
+      
+      {/* Estilo global para la animación del micrófono (opcional) */}
+      <style>{`
+        @keyframes pulse {
+          0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7); }
+          70% { transform: scale(1.1); box-shadow: 0 0 0 10px rgba(255, 0, 0, 0); }
+          100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 0, 0, 0); }
+        }
+      `}</style>
     </>
   );
 };
