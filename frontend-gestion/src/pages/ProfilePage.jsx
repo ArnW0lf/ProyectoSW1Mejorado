@@ -1,9 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react'; // <--- Añadir useCallback
+import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Title, Paper, TextInput, Select, Button, Loader, Center, Badge, Group, Text, Card, Image } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { IconCrown } from '@tabler/icons-react';
+import { IconCrown, IconSparkles, IconArrowLeft } from '@tabler/icons-react';
 import { useAuth } from '../context/AuthContext';
 import { getProfile, updateProfile, upgradeToPremium } from '../api/authService';
+import PricingModal from '../components/PricingModal';
+import { useNavigate } from 'react-router-dom'; 
 
 import logo from '../assets/logos.png'; 
 
@@ -12,10 +14,11 @@ const ProfilePage = () => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isUpgrading, setIsUpgrading] = useState(false);
+  const [pricingModalOpened, setPricingModalOpened] = useState(false);
 
   const [language, setLanguage] = useState('');
+  const navigate = useNavigate();
 
-  // 1. Usar useCallback para memoizar fetchProfile
   const fetchProfile = useCallback(async () => {
     try {
       setLoading(true);
@@ -27,15 +30,15 @@ const ProfilePage = () => {
     } finally {
       setLoading(false);
     }
-  }, []); // Dependencias vacías, solo se crea una vez
+  }, []);
 
   useEffect(() => {
     fetchProfile();
-  }, [fetchProfile]); // Ejecuta fetchProfile cuando cambie (pero con useCallback, solo lo hará una vez)
+  }, [fetchProfile]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true); // Podrías usar otro estado de carga para el submit si quieres
+    setLoading(true);
     try {
       const updatedData = { language_preference: language };
       await updateProfile(updatedData);
@@ -47,42 +50,31 @@ const ProfilePage = () => {
     }
   };
 
-  // 2. Usar useCallback para handleUpgrade también
   const handleUpgrade = useCallback(async () => {
-    if (!window.confirm("¿Confirmar pago de $0.00 para ser Premium? (Simulación)")) {
-      return;
-    }
-
-    // Si ya está actualizándose, no hacer nada para evitar dobles clics
-    if (isUpgrading) return; 
+    if (isUpgrading) return;
 
     setIsUpgrading(true);
     try {
-      // Llamamos a la API de simulación
       await upgradeToPremium();
       
       notifications.show({ 
-        title: '¡Pago Exitoso!', 
-        message: 'Bienvenido al plan Premium. Disfruta de acceso ilimitado.', 
+        title: '¡Bienvenido a Premium!', 
+        message: 'Tu suscripción ha sido activada exitosamente.', 
         color: 'green',
         icon: <IconCrown />,
         autoClose: 5000
       });
       
-      // Recargamos los datos del perfil para que se vea el cambio "Premium"
       await fetchProfile();
-      globalRefetch(); // Avisamos a toda la app que algo cambió
+      globalRefetch();
 
     } catch (err) {
-      // SOLO mostrar el error si hubo una falla REAL en la API
-      // El problema actual es que el 'success' y 'error' se disparan juntos
       console.error("Error en handleUpgrade:", err);
-      notifications.show({ title: 'Error', message: 'No se pudo procesar el pago.', color: 'red' });
+      throw err; // Re-lanzar para que el modal lo maneje
     } finally {
       setIsUpgrading(false);
     }
-  }, [isUpgrading, fetchProfile, globalRefetch]); // Dependencias para useCallback
-
+  }, [isUpgrading, fetchProfile, globalRefetch]);
 
   if (loading && !profile) {
     return <Center style={{ height: '80vh' }}><Loader /></Center>;
@@ -92,16 +84,49 @@ const ProfilePage = () => {
 
   return (
     <Container size="sm" mt="lg">
+
+    
       <Group mb="xl" align="center">
+          <Button 
+            variant="light" 
+            size="sm"
+            leftSection={<IconArrowLeft size={16} />}
+            onClick={() => navigate('/')} // Vuelve al Home
+          >
+            Volver
+          </Button>        
+
          <Image src={logo} w={60} />
          <Title order={1}>Mi Perfil</Title>
       </Group>
       
-      <Card withBorder shadow="sm" radius="md" mb="xl" padding="lg" style={{ borderColor: isPremium ? '#845ef7' : undefined }}>
+      <Card 
+        withBorder 
+        shadow="sm" 
+        radius="md" 
+        mb="xl" 
+        padding="lg" 
+        style={{ 
+          borderColor: isPremium ? '#845ef7' : undefined,
+          background: isPremium 
+            ? 'linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%)'
+            : undefined
+        }}
+      >
+
+
+      
         <Group justify="space-between" mb="xs">
             <Text fw={700} size="lg">Tu Plan Actual</Text>
             {isPremium ? (
-                <Badge size="lg" variant="gradient" gradient={{ from: 'violet', to: 'blue' }} leftSection={<IconCrown size={14} />}>PREMIUM</Badge>
+                <Badge 
+                  size="lg" 
+                  variant="gradient" 
+                  gradient={{ from: 'violet', to: 'blue' }} 
+                  leftSection={<IconCrown size={14} />}
+                >
+                  PREMIUM
+                </Badge>
             ) : (
                 <Badge size="lg" color="gray">GRATIS</Badge>
             )}
@@ -115,20 +140,24 @@ const ProfilePage = () => {
         
         {!isPremium && (
             <Button 
-                onClick={handleUpgrade} 
-                loading={isUpgrading}
+                onClick={() => setPricingModalOpened(true)}
                 variant="gradient" 
-                gradient={{ from: 'orange', to: 'red' }}
+                gradient={{ from: 'violet', to: 'blue' }}
                 fullWidth
-                leftSection={<IconCrown size={18} />}
-                // 3. Desactivar el botón completamente mientras se está actualizando
-                disabled={isUpgrading} 
+                leftSection={<IconSparkles size={18} />}
             >
-                Mejorar a Premium (Simular Pago)
+                Ver Planes y Mejorar a Premium
             </Button>
         )}
-      </Card>
 
+        {isPremium && (
+          <Group gap="xs">
+            <Text size="sm" c="dimmed">
+              💎 Disfrutando de todos los beneficios Premium
+            </Text>
+          </Group>
+        )}
+      </Card>
 
       <Paper withBorder shadow="md" p={30} radius="md">
         <form onSubmit={handleSubmit}>
@@ -164,6 +193,13 @@ const ProfilePage = () => {
           </Button>
         </form>
       </Paper>
+
+      <PricingModal
+        opened={pricingModalOpened}
+        onClose={() => setPricingModalOpened(false)}
+        onUpgrade={handleUpgrade}
+        isUpgrading={isUpgrading}
+      />
     </Container>
   );
 };

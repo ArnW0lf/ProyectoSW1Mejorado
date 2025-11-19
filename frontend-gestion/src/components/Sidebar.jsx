@@ -56,7 +56,7 @@ const Sidebar = ({ onJoinRoom }) => {
           leftSection={<IconMessagePlus size={18}/>}
           onClick={handleCreateRoom}
         >
-          Crear Sala
+          Crear Chat
         </Button>
         <Button 
           variant="outline" 
