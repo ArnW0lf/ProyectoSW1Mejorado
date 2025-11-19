@@ -1,25 +1,25 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Paper, TextInput, ActionIcon, ScrollArea, Text, Box, Group, Avatar, Transition } from '@mantine/core';
-// 1. Añadimos los iconos del micrófono
-import { IconSend, IconX, IconMessageChatbot, IconMicrophone, IconMicrophoneOff } from '@tabler/icons-react';
+// 1. Añadimos iconos de copia, check y cierre
+import { IconSend, IconX, IconMessageChatbot, IconMicrophone, IconMicrophoneOff, IconCopy, IconCheck } from '@tabler/icons-react';
+import { useClipboard } from '@mantine/hooks'; // Hook para copiar al portapapeles
 import WebSocketInstance from '../api/socketService';
 import { useAuth } from '../context/AuthContext';
 import useSpeechRecognition from '../hooks/useSpeechRecognition';
 
-const ChatWindow = ({ roomName = "general" }) => { 
+// 2. Aceptamos onClose
+const ChatWindow = ({ roomName, onClose }) => { 
   const [opened, setOpened] = useState(false);
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState('');
   const viewport = useRef(null);
   const { user } = useAuth();
+  const clipboard = useClipboard({ timeout: 2000 });
 
-  // 2. Usamos el Hook de Reconocimiento de Voz
   const { isListening, transcript, startListening, stopListening, hasSupport } = useSpeechRecognition();
 
-  // 3. Efecto Mágico: Cuando el navegador detecta texto, lo pone en el input
   useEffect(() => {
     if (transcript) {
-      // Concatenamos el texto hablado al texto existente (con un espacio si hace falta)
       setInputValue((prev) => {
         const spacer = prev.length > 0 && !prev.endsWith(' ') ? ' ' : '';
         return prev + spacer + transcript;
@@ -27,23 +27,23 @@ const ChatWindow = ({ roomName = "general" }) => {
     }
   }, [transcript]);
 
+  // 3. Lógica de apertura/cierre basada en roomName
   useEffect(() => {
-    if (opened) {
+    if (roomName) {
+      setOpened(true);
       WebSocketInstance.connect(roomName);
       
       WebSocketInstance.addCallbacks((data) => {
         setMessages((prev) => [...prev, data]);
       });
-    } else {
-      WebSocketInstance.disconnect();
-      // Si cierran el chat mientras graban, detenemos el micrófono
-      if (isListening) stopListening();
     }
     
+    // Limpieza al desmontar o cambiar de sala
     return () => {
-      if (opened) WebSocketInstance.disconnect();
+      WebSocketInstance.disconnect();
+      if (isListening) stopListening();
     };
-  }, [opened, roomName]); // Eliminamos isListening de aquí para evitar reconexiones innecesarias
+  }, [roomName]); // Se ejecuta cuando cambia el nombre de la sala
 
   useEffect(() => {
     viewport.current?.scrollTo({ top: viewport.current.scrollHeight, behavior: 'smooth' });
@@ -64,28 +64,17 @@ const ChatWindow = ({ roomName = "general" }) => {
     if (e.key === 'Enter') handleSendMessage();
   };
 
+  const handleClose = () => {
+    setOpened(false);
+    // Damos un pequeño tiempo para la animación de cierre antes de desmontar
+    setTimeout(() => {
+        if (onClose) onClose();
+    }, 300);
+  };
+
   return (
     <>
-      {/* Botón Flotante */}
-      <div style={{ position: 'fixed', bottom: 20, right: 20, zIndex: 1000 }}>
-        <Transition transition="scale" mounted={!opened}>
-          {(styles) => (
-            <ActionIcon 
-              style={{ 
-                ...styles, 
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)' 
-              }} 
-              radius="xl" 
-              size={60} 
-              color="violet" 
-              variant="filled"
-              onClick={() => setOpened(true)}
-            >
-              <IconMessageChatbot size={34} />
-            </ActionIcon>
-          )}
-        </Transition>
-      </div>
+      {/* Eliminamos el botón flotante de apertura manual */}
 
       {/* Ventana del Chat */}
       <Transition transition="slide-up" mounted={opened}>
@@ -111,9 +100,19 @@ const ChatWindow = ({ roomName = "general" }) => {
             <Group justify="space-between" p="md" bg="violet" c="white">
               <Group gap="xs">
                 <IconMessageChatbot />
-                <Text fw={700}>Sala: {roomName}</Text>
+                <Box>
+                  <Text fw={700} size="sm" style={{ lineHeight: 1.2 }}>Sala: {roomName}</Text>
+                  {/* Botón de Copiar Código */}
+                  <Group gap={4} style={{ cursor: 'pointer', opacity: 0.9 }} onClick={() => clipboard.copy(roomName)}>
+                    <Text size="xs" c="gray.2">
+                      {clipboard.copied ? '¡Copiado!' : 'Copiar código'}
+                    </Text>
+                    {clipboard.copied ? <IconCheck size={12}/> : <IconCopy size={12}/>}
+                  </Group>
+                </Box>
               </Group>
-              <ActionIcon variant="transparent" c="white" onClick={() => setOpened(false)}>
+              {/* Botón de Cierre */}
+              <ActionIcon variant="transparent" c="white" onClick={handleClose}>
                 <IconX />
               </ActionIcon>
             </Group>
@@ -122,7 +121,7 @@ const ChatWindow = ({ roomName = "general" }) => {
             <ScrollArea viewportRef={viewport} style={{ flex: 1, padding: '15px' }} bg="gray.0">
               {messages.length === 0 && (
                 <Text c="dimmed" size="sm" ta="center" mt="xl">
-                  No hay mensajes aún. ¡Di hola!
+                  Sala lista. Comparte el código <b>{roomName}</b> para invitar a otros.
                 </Text>
               )}
               
@@ -166,10 +165,9 @@ const ChatWindow = ({ roomName = "general" }) => {
               })}
             </ScrollArea>
 
-            {/* Input Area Actualizada */}
+            {/* Input Area */}
             <Box p="md" style={{ borderTop: '1px solid #eee' }}>
               <Group gap="xs">
-                {/* 4. Botón de Micrófono (Solo si hay soporte) */}
                 {hasSupport && (
                   <ActionIcon
                     variant={isListening ? "filled" : "light"} 
@@ -177,7 +175,6 @@ const ChatWindow = ({ roomName = "general" }) => {
                     size="lg"
                     onClick={isListening ? stopListening : startListening}
                     title={isListening ? "Detener grabación" : "Hablar para escribir"}
-                    // Animación simple de "pulso" si está escuchando
                     style={isListening ? { animation: 'pulse 2s infinite' } : {}}
                   >
                     {isListening ? <IconMicrophoneOff size={18} /> : <IconMicrophone size={18} />}
@@ -206,7 +203,6 @@ const ChatWindow = ({ roomName = "general" }) => {
         )}
       </Transition>
       
-      {/* Estilo global para la animación del micrófono (opcional) */}
       <style>{`
         @keyframes pulse {
           0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7); }

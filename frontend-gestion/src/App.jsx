@@ -1,6 +1,7 @@
+import { useState } from 'react'; // <--- 1. Importar useState
 import { AppShell } from '@mantine/core';
 import { Routes, Route } from 'react-router-dom';
-import { useAuth } from './context/AuthContext'; // 1. Importar el hook
+import { useAuth } from './context/AuthContext';
 import ChatWindow from './components/ChatWindow';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -15,16 +16,17 @@ import EmailVerifyPage from './pages/EmailVerifyPage';
 import DocumentViewPage from './pages/DocumentViewPage';
 
 function App() {
-  const { isAuthenticated } = useAuth(); // 3. Obtener estado de autenticación
+  const { isAuthenticated } = useAuth();
+  
+  // 2. Estado para controlar la sala activa (null = cerrado)
+  const [activeRoom, setActiveRoom] = useState(null); 
 
   return (
     <AppShell
       header={{ height: 60 }}
-      // 4. Configurar el panel lateral (Columna 1)
       navbar={{
-        width: 250, // Ancho de la columna
+        width: 250,
         breakpoint: 'sm',
-        // Ocultar el panel si no está autenticado (ej. en /login)
         collapsed: { mobile: !isAuthenticated, desktop: !isAuthenticated },
       }}
       padding="md"
@@ -33,17 +35,15 @@ function App() {
         <Navbar />
       </AppShell.Header>
 
-      {/* 5. Añadir el componente de panel lateral */}
       <AppShell.Navbar p="md">
-        <Sidebar />
+        {/* 3. Pasamos la función para activar sala al Sidebar */}
+        <Sidebar onJoinRoom={(roomName) => setActiveRoom(roomName)} />
       </AppShell.Navbar>
 
       <AppShell.Main>
-        {/* El contenido de la página (rutas) se renderiza aquí */}
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
-          
           <Route path="/password-reset" element={<PasswordResetRequestPage />} />
           <Route path="/password-reset/confirm" element={<PasswordResetConfirmPage />} />
           <Route path="/verify-email" element={<EmailVerifyPage />} />
@@ -65,9 +65,13 @@ function App() {
             element={<ProtectedRoute><DocumentViewPage /></ProtectedRoute>}
           />
         </Routes>
-        {isAuthenticated && (
-          <ChatWindow roomName="SalaConferencia1" /> 
-          // Nota: Hardcodeamos el nombre de la sala por ahora para probar
+
+        {/* 4. El ChatWindow es dinámico ahora */}
+        {isAuthenticated && activeRoom && (
+          <ChatWindow 
+            roomName={activeRoom} 
+            onClose={() => setActiveRoom(null)} // Función para cerrar la sala
+          /> 
         )}
       </AppShell.Main>
     </AppShell>
