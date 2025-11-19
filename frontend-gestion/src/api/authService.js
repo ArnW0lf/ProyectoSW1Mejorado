@@ -115,3 +115,17 @@ export const confirmPasswordReset = async (new_password1, new_password2, uid, to
         throw error;
     }
 };
+
+/**
+ * SIMULACIÓN DE PAGO:
+ * Llama al endpoint que convierte al usuario en Premium instantáneamente.
+ */
+export const upgradeToPremium = async () => {
+    try {
+        const response = await apiClient.post('/upgrade-premium/');
+        return response.data;
+    } catch (error) {
+        console.error('Error al procesar el pago simulado:', error);
+        throw error;
+    }
+};

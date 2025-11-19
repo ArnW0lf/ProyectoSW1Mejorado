@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-
+from django.utils import timezone
 
 def user_directory_path(instance, filename):
     """Genera la ruta de archivo para nuevos documentos: MEDIA_ROOT/user_<id>/<filename>"""
@@ -31,8 +31,15 @@ class Profile(models.Model):
         max_length=50, default='google_translate', help_text="API de traducción preferida")
     # --- FIN DEL CAMPO AÑADIDO ---
 
+    daily_messages_count = models.IntegerField(default=0, help_text="Mensajes enviados hoy")
+    last_message_date = models.DateField(default=timezone.now)
+
+    # 2. Límites de IA
+    daily_ai_requests_count = models.IntegerField(default=0, help_text="Peticiones a la IA hoy")
+    last_ai_request_date = models.DateField(default=timezone.now)
+
     def __str__(self):
-        return f"Perfil de {self.user.username}"
+        return f"Perfil de {self.user.username} ({self.subscription_plan})"
 
 
 @receiver(post_save, sender=User)

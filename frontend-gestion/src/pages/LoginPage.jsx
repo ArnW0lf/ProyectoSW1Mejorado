@@ -1,90 +1,88 @@
+// src/pages/LoginPage.jsx
 import React, { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { useNavigate, Link } from 'react-router-dom';
 import {
   Paper,
-  Title,
   TextInput,
   PasswordInput,
   Button,
+  Title,
   Text,
   Anchor,
-  Center,
   Container,
   Group,
+  Image, // <--- Importa Image
 } from '@mantine/core';
-// 1. Importar el hook de notificaciones
+import { useAuth } from '../context/AuthContext';
 import { notifications } from '@mantine/notifications';
-import { IconAlertCircle } from '@tabler/icons-react';
+import { useNavigate } from 'react-router-dom';
+
+import logo from '../assets/logos.png'; 
 
 const LoginPage = () => {
+  const { login } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const { login } = useAuth();
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    console.log('Enviando al backend:', { username, password });
+    setLoading(true);
     try {
       await login(username, password);
-      // ¡No mostramos notificación de éxito aquí, AuthContext lo hará!
-      navigate('/');
-    } catch (err) {
-      // 3. Mostrar notificación de error
-      notifications.show({
-        title: 'Error al iniciar sesión',
-        message: 'Por favor, revisa tu usuario y contraseña.',
-        color: 'red',
-        icon: <IconAlertCircle />,
-      });
-      console.error(err);
+      notifications.show({ title: 'Éxito', message: 'Inicio de sesión correcto', color: 'green' });
+      navigate('/home'); // Redirige a la página principal
+    } catch (error) {
+      notifications.show({ title: 'Error', message: error.message || 'Credenciales inválidas', color: 'red' });
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <Container size={420} my={40}>
-      <Center>
-        <Paper withBorder shadow="md" p={30} radius="md" style={{ width: '100%' }}>
-          <Title order={2} ta="center" mb="lg">
+     <Group position="center" mb="xl">
+  <Image
+    src={logo}
+    alt="Lingua-Sync AI Logo"
+    w={70}
+    h={70}
+    fit="contain"
+  />
+</Group>
+
+      <Title ta="center" order={2}>
+        Bienvenido de nuevo!
+      </Title>
+      <Text c="dimmed" size="sm" ta="center" mt={5}>
+        ¿No tienes cuenta?{' '}
+        <Anchor size="sm" component="button" onClick={() => navigate('/register')}>
+          Crea una
+        </Anchor>
+      </Text>
+
+      <Paper withBorder shadow="md" p={30} mt={30} radius="md">
+        <form onSubmit={handleLogin}>
+          <TextInput
+            label="Usuario"
+            placeholder="Tu usuario"
+            required
+            value={username}
+            onChange={(event) => setUsername(event.currentTarget.value)}
+          />
+          <PasswordInput
+            label="Contraseña"
+            placeholder="Tu contraseña"
+            required
+            mt="md"
+            value={password}
+            onChange={(event) => setPassword(event.currentTarget.value)}
+          />
+          <Button type="submit" fullWidth mt="xl" loading={loading}>
             Iniciar Sesión
-          </Title>
-
-          <form onSubmit={handleSubmit}>
-            <TextInput
-              label="Username"
-              placeholder="Tu nombre de usuario"
-              value={username}
-              onChange={(e) => setUsername(e.currentTarget.value)}
-              required
-            />
-            <PasswordInput
-              label="Password"
-              placeholder="Tu contraseña"
-              value={password}
-              onChange={(e) => setPassword(e.currentTarget.value)}
-              required
-              mt="md"
-            />
-            <Group justify="flex-end" mt="sm">
-              <Anchor component={Link} to="/password-reset" size="sm">
-                ¿Olvidaste tu contraseña?
-              </Anchor>
-            </Group>
-
-            <Button fullWidth mt="xl" type="submit">
-              Ingresar
-            </Button>
-          </form>
-
-          <Text c="dimmed" size="sm" ta="center" mt="md">
-            ¿No tienes una cuenta?{' '}
-            <Anchor component={Link} to="/register" size="sm">
-              Registrarse aquí
-            </Anchor>
-          </Text>
-        </Paper>
-      </Center>
+          </Button>
+        </form>
+      </Paper>
     </Container>
   );
 };

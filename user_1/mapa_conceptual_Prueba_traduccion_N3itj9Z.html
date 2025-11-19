@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Mapa Conceptual</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px;
+            margin: 0;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 50px;
+            font-size: 2.5em;
+        }
+        .mindmap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 40px;
+        }
+        .central {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 50px;
+            border-radius: 20px;
+            font-size: 1.8em;
+            font-weight: bold;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+            max-width: 400px;
+        }
+        .branches {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            width: 100%;
+            margin-top: 30px;
+        }
+        .branch {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            border-left: 5px solid #667eea;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .branch-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        .subconcept {
+            background: white;
+            padding: 12px 18px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border-left: 3px solid #764ba2;
+            font-size: 1em;
+            color: #2c3e50;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>El Arquitecto de Sistemas Imposibles</h1>
+        <div class="mindmap">
+            <div class="central">Transformación de StartupHealth</div>
+            <div class="branches">
+                <div class="branch">
+                    <div class="branch-title">El Problema Inicial</div>
+                    <div class="subconcept">Arquitectura Compleja</div>
+                    <div class="subconcept">Colapso de la Plataforma</div>
+                    <div class="subconcept">Microservicios Excesivos</div>
+                </div>
+                <div class="branch">
+                    <div class="branch-title">La Solución de Daniel Ortega</div>
+                    <div class="subconcept">Simplificación del Sistema</div>
+                    <div class="subconcept">Consolidación de Servicios</div>
+                    <div class="subconcept">Estandarización Tecnológica</div>
+                </div>
+                <div class="branch">
+                    <div class="branch-title">Principios Clave</div>
+                    <div class="subconcept">Simplicidad</div>
+                    <div class="subconcept">Comprensión del Dominio</div>
+                    <div class="subconcept">Soluciones Adecuadas</div>
+                </div>
+                <div class="branch">
+                    <div class="branch-title">Resultados Obtenidos</div>
+                    <div class="subconcept">Plataforma Estabilizada</div>
+                    <div class="subconcept">Escalabilidad Mejorada</div>
+                    <div class="subconcept">Equipo Transformado</div>
+                </div>
+                <div class="branch">
+                    <div class="branch-title">Lecciones Aprendidas</div>
+                    <div class="subconcept">Ingeniería Sostenible</div>
+                    <div class="subconcept">Resolución de Problemas Efectiva</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

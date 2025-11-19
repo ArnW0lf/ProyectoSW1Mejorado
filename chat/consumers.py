@@ -1,6 +1,7 @@
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from asgiref.sync import sync_to_async
+from django.utils import timezone
 
 from api.models import Profile 
 from api.translation import translate_text
@@ -45,6 +46,14 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         data = json.loads(text_data)
         message = data['message']
+
+        can_send = await self.check_message_limit(self.user)
+        if not can_send:
+            await self.send(text_data=json.dumps({
+                'message': "🚫 Límite diario alcanzado (10 msgs). Simula tu pago a Premium para continuar.",
+                'username': "Sistema"
+            }))
+            return
         
         # Obtenemos el idioma de origen del usuario que envía
         source_language = await self.get_user_language(self.user)
@@ -59,6 +68,30 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 'source_lang': source_language
             }
         )
+
+    @sync_to_async
+    def check_message_limit(self, user):
+        try:
+            profile = user.profile
+            today = timezone.now().date()
+            
+            # Resetear si es otro día
+            if profile.last_message_date != today:
+                profile.daily_messages_count = 0
+                profile.last_message_date = today
+            
+            # Validar
+            limit = 10 # Demo limit
+            if profile.subscription_plan == 'free' and profile.daily_messages_count >= limit:
+                profile.save()
+                return False
+            
+            # Contar
+            profile.daily_messages_count += 1
+            profile.save()
+            return True
+        except:
+            return True
 
     # 4. Esta función se llama en CADA consumidor (usuario) del grupo
     async def chat_message(self, event):

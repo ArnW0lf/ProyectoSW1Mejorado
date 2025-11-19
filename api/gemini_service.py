@@ -110,6 +110,13 @@ Acciones disponibles:
         """Ejecuta la acción determinada por Gemini"""
         action = action_data.get('action')
         params = action_data.get('parameters', {})
+
+        if action == 'create_mindmap':
+            if self.user.profile.subscription_plan != 'premium':
+                return {
+                    'success': False, 
+                    'message': '🔒 La función de Mapas Conceptuales es exclusiva para usuarios Premium. ¡Actualiza tu plan!'
+                }
         
         try:
             if action == 'tag_document':

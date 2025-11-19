@@ -19,6 +19,7 @@ from .text_extractor import extract_text
 from django.shortcuts import redirect
 from io import BytesIO
 from docx import Document as DocxDocument
+from rest_framework.exceptions import PermissionDenied
 
 # IMPORTACIONES PARA PDF
 from reportlab.lib.pagesizes import letter
@@ -28,6 +29,8 @@ from reportlab.lib.units import inch
 
 from .gemini_service import GeminiAssistant
 from rest_framework.decorators import api_view, permission_classes
+from django.utils import timezone
+
 
 def test_endpoint(request):
     """
@@ -43,15 +46,45 @@ def test_endpoint(request):
 
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
+def upgrade_to_premium(request):
+    """Simula el pago exitoso y actualiza el plan a Premium."""
+    profile = request.user.profile
+    profile.subscription_plan = 'premium'
+    profile.save()
+    return Response({
+        'message': '¡Pago simulado exitoso! Ahora eres usuario Premium.',
+        'plan': 'premium'
+    }, status=200)
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
 def ai_assistant(request):
-    """
-    Endpoint para procesar comandos de IA
-    """
     prompt = request.data.get('prompt')
-    
     if not prompt:
         return Response({'error': 'El prompt es requerido'}, status=400)
+
+    # --- LÓGICA DE LÍMITES DE IA ---
+    profile = request.user.profile
+    today = timezone.now().date()
     
+    # Resetear contador si es un nuevo día
+    if profile.last_ai_request_date != today:
+        profile.daily_ai_requests_count = 0
+        profile.last_ai_request_date = today
+    
+    # Definir límites
+    limit = 30 if profile.subscription_plan == 'premium' else 5
+    
+    if profile.daily_ai_requests_count >= limit:
+        return Response({
+            'error': f'Has alcanzado tu límite diario de {limit} peticiones de IA. Mejora a Premium para más.'
+        }, status=403)
+    
+    # Incrementar contador
+    profile.daily_ai_requests_count += 1
+    profile.save()
+    # --------------------------------
+
     try:
         assistant = GeminiAssistant(request.user)
         result = assistant.process_command(prompt)
@@ -142,7 +175,13 @@ class DocumentViewSet(viewsets.ModelViewSet):
     filterset_fields = ['tags', 'folder']
 
     def perform_create(self, serializer):
-        document = serializer.save(owner=self.request.user)
+        user = self.request.user
+        if user.profile.subscription_plan == 'free':
+            doc_count = Document.objects.filter(owner=user).count()
+            if doc_count >= 5:
+                raise PermissionDenied("Has alcanzado el límite de 5 documentos gratuitos. Pásate a Premium.")
+
+        document = serializer.save(owner=user)
         try:
             content = extract_text(document)
             if content:
