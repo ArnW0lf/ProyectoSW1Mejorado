@@ -8,7 +8,7 @@ const ProfilePage = () => {
   const { user } = useAuth(); // Obtener el usuario base del contexto
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
-  
+
   // Estado para el formulario
   const [language, setLanguage] = useState('');
 
@@ -65,15 +65,18 @@ const ProfilePage = () => {
             disabled
             mt="md"
           />
-          
+
           {/* Mostramos el 'profile' de la API (editable) */}
           <Select
             label="Idioma de Preferencia"
             value={language}
             onChange={setLanguage}
             data={[
-              { value: 'es', label: 'Español' },
               { value: 'en', label: 'Inglés' },
+              { value: 'es', label: 'Español' },
+              { value: 'fr', label: 'Francés' },
+              { value: 'de', label: 'Alemán' },
+              { value: 'pt', label: 'Portugués' },
             ]}
             mt="md"
             disabled={loading}
