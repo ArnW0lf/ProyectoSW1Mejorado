@@ -5,14 +5,16 @@ services:
     name: traductordb
     region: oregon # O la region que prefieras
     plan: starter # O el plan que elijas (Starter plan recomendado para inicio)
-    databaseName: traductordb
+    postgresData: # <--- NUEVA SECCIÓN
+      databaseName: traductordb # <--- Corregido
 
   # 2. BROKER DE CANALES (Redis para WebSockets)
   - type: redis
     name: redis-broker
     region: oregon
     plan: starter
-    maxmemory: 20mb # Suficiente para el chat
+    redisData: # <--- NUEVA SECCIÓN
+      maxmemory: 20mb # <--- Corregido
 
   # 3. SERVIDOR WEB (Django + WebSockets)
   - type: web
@@ -25,9 +27,6 @@ services:
     # Comando de inicio: Usamos Daphne para manejar HTTP y WebSockets (ASGI)
     # Importante: Asegúrate de que 'backend.asgi:application' es la ruta correcta a tu asgi.py
     startCommand: "daphne backend.asgi:application -b 0.0.0.0 -p 10000"
-    
-    # CRÍTICO: El puerto que Daphne está escuchando. Render lo mapeará al puerto 443 (HTTPS)
-    port: 10000 
     
     # Variables de Entorno que el Backend necesita
     envVars:
