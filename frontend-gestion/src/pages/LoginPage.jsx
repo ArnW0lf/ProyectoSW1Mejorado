@@ -41,15 +41,15 @@ const LoginPage = () => {
 
   return (
     <Container size={420} my={40}>
-     <Group position="center" mb="xl">
-  <Image
-    src={logo}
-    alt="Lingua-Sync AI Logo"
-    w={70}
-    h={70}
-    fit="contain"
-  />
-</Group>
+     <Group justify="center" mb="xl">
+        <Image
+          src={logo}
+          alt="Lingua-Sync AI Logo"
+          w={70}
+          h={70}
+          fit="contain"
+        />
+      </Group>
 
       <Title ta="center" order={2}>
         Bienvenido de nuevo!

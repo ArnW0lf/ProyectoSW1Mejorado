@@ -175,6 +175,9 @@ ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # --- Configuración de CORS ---
 # Lista de orígenes permitidos para peticiones CORS
+
+ACCOUNT_EMAIL_CONFIRMATION_HMAC= False
+
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",  # Puerto común para Vite/React
     "http://localhost:3000",  # Puerto común para React

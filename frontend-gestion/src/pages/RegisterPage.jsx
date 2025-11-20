@@ -11,7 +11,7 @@ import {
   Anchor,
   Center,
   Container,
-  Alert
+  Alert, Stack
 } from '@mantine/core';
 // 1. Importar el hook y los iconos
 import { notifications } from '@mantine/notifications';
@@ -74,22 +74,40 @@ const RegisterPage = () => {
   };
 
   // Si el registro fue exitoso, muestra solo el mensaje
-  if (showSuccess) {
+ if (showSuccess) {
     return (
       <Container size={420} my={40}>
         <Paper withBorder shadow="md" p={30} radius="md">
           <Alert icon={<IconCheck size="1.1rem" />} title="¡Registro Exitoso!" color="green">
-            ¡Revisa tu correo! Hemos enviado un enlace de verificación.
+            Cuenta creada correctamente.
           </Alert>
+          
+          {/* --- SECCIÓN MODIFICADA --- */}
           {verificationUrl && (
-            <Text mt="md">
-              <Text fw={500}>Enlace de Verificación (para desarrollo):</Text>
-              <Anchor href={verificationUrl} target="_blank" size="sm">
-                {verificationUrl}
-              </Anchor>
-            </Text>
+            <Stack mt="lg" align="center">
+              <Text size="sm" ta="center">
+                Para completar el proceso, haz clic en el botón de abajo:
+              </Text>
+              
+              {/* Botón que actúa como enlace GET a la URL de verificación */}
+              <Button 
+                component="a" 
+                href={verificationUrl}
+                size="md"
+                color="teal"
+                fullWidth
+              >
+                CONFIRMAR CUENTA AHORA
+              </Button>
+              
+              <Text size="xs" c="dimmed" ta="center" mt="xs">
+                (Esto simula hacer clic en el enlace del correo)
+              </Text>
+            </Stack>
           )}
-          <Button component={Link} to="/login" fullWidth mt="lg">
+          {/* -------------------------- */}
+
+          <Button component={Link} to="/login" variant="subtle" fullWidth mt="md">
             Ir a Iniciar Sesión
           </Button>
         </Paper>

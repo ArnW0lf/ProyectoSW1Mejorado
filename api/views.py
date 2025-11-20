@@ -10,7 +10,9 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter
 from rest_framework.decorators import action
 from django.db.models import Q
-from dj_rest_auth.registration.views import VerifyEmailView
+from dj_rest_auth.registration.views import RegisterView, VerifyEmailView 
+from allauth.account.models import EmailConfirmation
+from django.urls import reverse
 from .models import Profile, Folder, Document, Tag, DocumentPermission
 from .serializers import ProfileSerializer, FolderSerializer, DocumentSerializer, TagSerializer, DocumentPermissionSerializer
 from .permissions import IsOwnerOrHasPermission
@@ -401,3 +403,46 @@ class TranslationHistoryViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         return TranslationHistory.objects.filter(user=self.request.user)
+
+
+
+
+class CustomRegisterView(RegisterView):
+    """
+    Vista personalizada que captura el usuario y devuelve la URL de verificación.
+    """
+    
+    # 1. MÉTODO NUEVO: Capturamos el usuario cuando se crea
+    def perform_create(self, serializer):
+        user = super().perform_create(serializer)
+        self.user = user  # <--- ¡ESTO SOLUCIONA EL ERROR "no attribute user"!
+        return user
+
+    def create(self, request, *args, **kwargs):
+        # 2. Llamar a la creación estándar
+        response = super().create(request, *args, **kwargs)
+        
+        # 3. Si se creó correctamente (201), inyectar la URL
+        if response.status_code == 201:
+            try:
+                # Ahora self.user SÍ existe porque lo guardamos en perform_create
+                user = self.user
+                
+                # Buscar la confirmación
+                confirmation = EmailConfirmation.objects.filter(
+                    email_address__user=user
+                ).order_by('-created').first()
+                
+                if confirmation:
+                    # Construir la URL
+                    verification_path = reverse('account_confirm_email', kwargs={'key': confirmation.key})
+                    verification_url = request.build_absolute_uri(verification_path)
+                    
+                    # Enviarla al frontend
+                    response.data['verification_url'] = verification_url
+                    print(f"✅ URL de verificación generada para Frontend: {verification_url}")
+                    
+            except Exception as e:
+                print(f"⚠️ Error generando URL automática: {e}")
+        
+        return response
