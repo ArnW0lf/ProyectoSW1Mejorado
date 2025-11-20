@@ -17,7 +17,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         # Obtenemos el usuario. Gracias a AuthMiddlewareStack en asgi.py
         self.user = self.scope['user']
 
-        # Rechazar conexión si el usuario no está autenticado
+        # Rechazar conexiÃ³n si el usuario no estÃ¡ autenticado
         if not self.user.is_authenticated:
             await self.close()
             return
@@ -28,7 +28,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             self.channel_name
         )
         
-        # 2. Aceptar la conexión WebSocket
+        # 2. Aceptar la conexiÃ³n WebSocket
         await self.accept()
         print(f"Usuario {self.user.username} conectado a la sala: {self.room_name}")
 
@@ -42,7 +42,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         print(f"Usuario {self.user.username} desconectado de la sala: {self.room_name}")
 
 
-    # 3. Esta función se llama cuando recibimos un mensaje del cliente (Frontend)
+    # 3. Esta funciÃ³n se llama cuando recibimos un mensaje del cliente (Frontend)
     async def receive(self, text_data):
         data = json.loads(text_data)
         message = data['message']
@@ -50,19 +50,19 @@ class ChatConsumer(AsyncWebsocketConsumer):
         can_send = await self.check_message_limit(self.user)
         if not can_send:
             await self.send(text_data=json.dumps({
-                'message': "🚫 Límite diario alcanzado (10 msgs). Simula tu pago a Premium para continuar.",
+                'message': "ðŸš« LÃ­mite diario alcanzado (10 msgs). Simula tu pago a Premium para continuar.",
                 'username': "Sistema"
             }))
             return
         
-        # Obtenemos el idioma de origen del usuario que envía
+        # Obtenemos el idioma de origen del usuario que envÃ­a
         source_language = await self.get_user_language(self.user)
 
-        # Enviar el mensaje al grupo (esto llamará a la función 'chat_message')
+        # Enviar el mensaje al grupo (esto llamarÃ¡ a la funciÃ³n 'chat_message')
         await self.channel_layer.group_send(
             self.room_group_name,
             {
-                'type': 'chat_message', # Llama a la función chat_message
+                'type': 'chat_message', # Llama a la funciÃ³n chat_message
                 'message': message,
                 'username': self.user.username,
                 'source_lang': source_language
@@ -75,7 +75,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             profile = user.profile
             today = timezone.now().date()
             
-            # Resetear si es otro día
+            # Resetear si es otro dÃ­a
             if profile.last_message_date != today:
                 profile.daily_messages_count = 0
                 profile.last_message_date = today
@@ -93,7 +93,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         except:
             return True
 
-    # 4. Esta función se llama en CADA consumidor (usuario) del grupo
+    # 4. Esta funciÃ³n se llama en CADA consumidor (usuario) del grupo
     async def chat_message(self, event):
         message = event['message']
         username = event['username']
@@ -104,15 +104,15 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         translated_text = message
         
-        # 5. Usamos sync_to_async para la traducción si los idiomas son diferentes
+        # 5. Usamos sync_to_async para la traducciÃ³n si los idiomas son diferentes
         if source_lang != target_language:
-            # ¡Aquí ocurre la magia!
+            # Â¡AquÃ­ ocurre la magia!
             translation_result = await self.perform_translation(message, target_language, source_lang)
             
             if 'error' not in translation_result:
                 translated_text = translation_result['translated_text']
             else:
-                print(f"Error de traducción: {translation_result['error']}")
+                print(f"Error de traducciÃ³n: {translation_result['error']}")
                 translated_text = f"Error al traducir: {message}" # Enviar error al cliente
 
         # 6. Enviar el mensaje (traducido o no) de vuelta al frontend de este usuario
@@ -129,7 +129,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         Obtiene la preferencia de idioma del perfil del usuario (acceso a BBDD).
         """
         try:
-            # Usamos el modelo Profile que ya tenías
+            # Usamos el modelo Profile que ya tenÃ­as
             return user.profile.language_preference
         except Profile.DoesNotExist:
             return 'es' # Idioma por defecto si no tiene perfil
@@ -137,7 +137,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
     @sync_to_async
     def perform_translation(self, text, target_lang, source_lang):
         """
-        Ejecuta la traducción síncrona (de translation.py) en un hilo separado.
+        Ejecuta la traducciÃ³n sÃ­ncrona (de translation.py) en un hilo separado.
         """
-        # Usamos la función que ya tenías
+        # Usamos la funciÃ³n que ya tenÃ­as
         return translate_text(text, target_lang, source_lang)

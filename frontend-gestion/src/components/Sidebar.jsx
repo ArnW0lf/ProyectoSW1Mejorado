@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
-import { Box, Title, Group, ActionIcon, Button, Divider, Modal, TextInput, Stack, Text } from '@mantine/core';
-import { IconPlus, IconMessagePlus, IconLogin } from '@tabler/icons-react';
+import { ActionIcon, Button, Divider, Group, Modal, Stack, Text, TextInput, Title } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks'; // Necesario para el modal
-import FolderTree from './FolderTree';
-import TagList from './TagList';
+import { IconLogin, IconMessagePlus, IconPlus } from '@tabler/icons-react';
+import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import CreateFolderModal from './CreateFolderModal';
 import CreateTagModal from './CreateTagModal';
+import FolderTree from './FolderTree';
+import TagList from './TagList';
 
 // 1. Recibimos onJoinRoom como prop
 const Sidebar = ({ onJoinRoom }) => {
@@ -29,7 +29,7 @@ const Sidebar = ({ onJoinRoom }) => {
     setTagModalOpened(false); 
   };
 
-  // --- LÓGICA DE SALAS ---
+  // --- LÃ“GICA DE SALAS ---
   const handleCreateRoom = () => {
     // Genera un ID aleatorio simple (ej: conf-9382)
     const randomId = 'conf-' + Math.floor(1000 + Math.random() * 9000);
@@ -46,7 +46,7 @@ const Sidebar = ({ onJoinRoom }) => {
   
   return (
     <>
-      {/* --- SECCIÓN CONFERENCIAS --- */}
+      {/* --- SECCIÃ“N CONFERENCIAS --- */}
       <Text size="xs" fw={500} c="dimmed" mb={5}>CONFERENCIAS</Text>
       <Stack gap="xs" mb="xl">
         <Button 
@@ -65,13 +65,13 @@ const Sidebar = ({ onJoinRoom }) => {
           leftSection={<IconLogin size={18}/>}
           onClick={openJoinModal}
         >
-          Unirse con Código
+          Unirse con Codigo
         </Button>
       </Stack>
 
       <Divider my="sm" label="Documentos" labelPosition="center" />
 
-      {/* --- SECCIÓN CARPETAS (Tu código original) --- */}
+      {/* --- SECCIÃ“N CARPETAS (Tu codigo original) --- */}
       <Group justify="space-between" mb="sm">
         <Title order={4}>Carpetas</Title>
         <ActionIcon size="sm" variant="default" onClick={() => setFolderModalOpened(true)}>
@@ -85,7 +85,7 @@ const Sidebar = ({ onJoinRoom }) => {
         onRefetch={handleFolderSuccess}
       />
 
-      {/* --- SECCIÓN ETIQUETAS (Tu código original) --- */}
+      {/* --- SECCIÃ“N ETIQUETAS (Tu codigo original) --- */}
       <Group justify="space-between" mt="xl" mb="sm">
         <Title order={4}>Etiquetas</Title>
         <ActionIcon size="sm" variant="default" onClick={() => setTagModalOpened(true)}>
@@ -112,10 +112,10 @@ const Sidebar = ({ onJoinRoom }) => {
       />
 
       {/* Modal para Unirse a Sala */}
-      <Modal opened={joinModalOpened} onClose={closeJoinModal} title="Unirse a Conferencia" centered>
+      <Modal opened={joinModalOpened} onClose={closeJoinModal} title="Unirse al Chat" centered>
         <Stack>
           <TextInput
-            label="Código de la Sala"
+            label="codigo de la Sala"
             placeholder="Ej: conf-1234"
             value={roomCodeInput}
             onChange={(e) => setRoomCodeInput(e.currentTarget.value)}
