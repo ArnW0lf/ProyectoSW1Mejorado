@@ -1,0 +1,48 @@
+# render.yaml
+services:
+  # 1. BASE DE DATOS (PostgreSQL)
+  - type: pserv
+    name: traductordb
+    region: oregon # O la region que prefieras
+    plan: starter # O el plan que elijas (Starter plan recomendado para inicio)
+    databaseName: traductordb
+
+  # 2. BROKER DE CANALES (Redis para WebSockets)
+  - type: redis
+    name: redis-broker
+    region: oregon
+    plan: starter
+    maxmemory: 20mb # Suficiente para el chat
+
+  # 3. SERVIDOR WEB (Django + WebSockets)
+  - type: web
+    name: mi-backend-django
+    region: oregon
+    env: python
+    plan: starter
+    # Comando de construcción: ejecuta el script build.sh
+    buildCommand: "./build.sh" 
+    # Comando de inicio: Usamos Daphne para manejar HTTP y WebSockets (ASGI)
+    # Importante: Asegúrate de que 'backend.asgi:application' es la ruta correcta a tu asgi.py
+    startCommand: "daphne backend.asgi:application -b 0.0.0.0 -p 10000"
+    
+    # CRÍTICO: El puerto que Daphne está escuchando. Render lo mapeará al puerto 443 (HTTPS)
+    port: 10000 
+    
+    # Variables de Entorno que el Backend necesita
+    envVars:
+      - key: DATABASE_URL # Render inyecta la URL de la base de datos que creamos
+        fromDatabase:
+          name: traductordb
+          property: connectionString
+      - key: REDIS_URL # Render inyecta la URL del servicio Redis
+        fromService:
+          type: redis
+          name: redis-broker
+          property: connectionString
+      - key: DEBUG
+        value: "False" # Siempre False en producción
+      - key: SECRET_KEY # Debe ser generado en Render (NO aquí)
+        generateValue: true
+      - key: WEB_CONCURRENCY
+        value: 4 # Número de procesos Worker para Daphne

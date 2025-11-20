@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -97,15 +98,25 @@ ASGI_APPLICATION = 'backend.asgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('DB_NAME', 'traductordb'),
-        'USER': os.environ.get('DB_USER', 'postgres'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', '123456789'),
-        'HOST': os.environ.get('DB_HOST', 'localhost'),
-        'PORT': os.environ.get('DB_PORT', '5432'),
-    }
+    'default': dj_database_url.config(
+        default=os.environ.get('DATABASE_URL'),
+        conn_max_age=600  # Mantiene las conexiones a DB vivas por 10 minutos
+    )
 }
+
+# Si la URL de Render no está presente, y no estamos en un entorno Render,
+# usamos el fallback de tus variables locales (DB_NAME, etc.).
+if not os.environ.get('DATABASE_URL'):
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('DB_NAME', 'traductordb'),
+            'USER': os.environ.get('DB_USER', 'postgres'),
+            'PASSWORD': os.environ.get('DB_PASSWORD', '123456789'),
+            'HOST': os.environ.get('DB_HOST', 'localhost'),
+            'PORT': os.environ.get('DB_PORT', '5432'),
+        }
+    }
 
 
 # Password validation
@@ -143,6 +154,14 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+# Directorio donde Django recolectará los archivos para producción
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+# Storage para manejar los archivos estáticos (esencial para collectstatic)
+STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage' 
+
+# Configuración de archivos media (si los usuarios suben archivos)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -165,29 +184,69 @@ REST_FRAMEWORK = {
         'django_filters.rest_framework.DjangoFilterBackend',
     ],
 }
+
+# --- INICIO DE LA CORRECCIÓN DE allauth ---
 # Configuración de django-allauth (usado por dj-rest-auth)
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = True
 ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
+
+# Opcional: define explícitamente los métodos de login permitidos
+ACCOUNT_LOGIN_METHODS = ['username', 'email'] 
+
 # La verificación de correo es ahora obligatoria para poder iniciar sesión.
 ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
 # Durante el desarrollo, los correos se imprimirán en la consola en lugar de ser enviados.
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# --- FIN DE LA CORRECCIÓN DE allauth ---
+
 # --- Configuración de CORS ---
 # Lista de orígenes permitidos para peticiones CORS
 
 ACCOUNT_EMAIL_CONFIRMATION_HMAC= False
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",  # Puerto común para Vite/React
-    "http://localhost:3000",  # Puerto común para React
-    # Añade aquí otros orígenes si es necesario
-]
+if DEBUG:
+    # En desarrollo local
+    CORS_ALLOWED_ORIGINS = [
+        "http://localhost:5173",  # React/Vite
+        "http://localhost:3000",  # React
+    ]
+else:
+    # En producción (Render)
+    RENDER_EXTERNAL_URL = os.environ.get("RENDER_EXTERNAL_URL")
+
+    # Permitimos el dominio de Render (HTTP) y el dominio de Render (WebSockets WSS)
+    CORS_ALLOWED_ORIGINS = [
+        # El dominio principal del Backend para llamadas API
+        f"https://{RENDER_EXTERNAL_URL}", 
+        # El protocolo WebSocket seguro para el chat
+        f"wss://{RENDER_EXTERNAL_URL}",    
+        # ¡IMPORTANTE! Si tu Frontend de React está en un dominio diferente de Render
+        # (ej: mi-frontend.onrender.com), debes añadir su URL HTTPS aquí
+        # "https://mi-frontend-react.onrender.com" 
+    ]
+    # Si el frontend es un servicio estático separado, su URL debe ir aquí
+
 # Opcional: Permite que el frontend envíe cookies (necesario para sesiones)
 CORS_ALLOW_CREDENTIALS = True
 
-CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels.layers.InMemoryChannelLayer',
-    },
-}
+# --- Configuración de CHANNELS / WEBSOCKETS ---
+REDIS_URL = os.environ.get("REDIS_URL") # Variable que Render inyectará
+
+if REDIS_URL:
+    # Configuración de producción usando Redis
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels_redis.pubsub.RedisPubSubChannelLayer',
+            'CONFIG': {
+                "hosts": [REDIS_URL],
+            },
+        },
+    }
+else:
+    # Fallback para desarrollo (InMemoryChannelLayer si no hay Redis)
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels.layers.InMemoryChannelLayer',
+        },
+    }

@@ -13,26 +13,41 @@ class WebSocketService {
     this.socketRef = null;
   }
 
-  // Iniciar conexiÃ³n
+  // Iniciar conexión
   connect(roomName) {
     // 1. Recuperamos el token del almacenamiento local
     const token = localStorage.getItem('authToken'); 
 
     if (!token) {
-      console.error("âŒ No hay token de autenticaciÃ³n. No se puede conectar al chat.");
+      console.error("❌ No hay token de autenticación. No se puede conectar al chat.");
       return;
     }
-
-    // 2. Lo enviamos como parÃ¡metro en la URL (?token=...)
-    const path = `ws://localhost:8000/ws/chat/${roomName}/?token=${token}`;
     
-    this.socketRef = new WebSocket(path);
+    // --- LÓGICA DE URL DINÁMICA ---
+    
+    // Usamos VITE_WS_URL que se definirá en el archivo .env o .env.production.
+    // Fallback: 'ws://localhost:8000' para desarrollo.
+    const baseProtocol = import.meta.env.VITE_WS_URL || 'ws://localhost:8000';
+    
+    // 2. Construimos la ruta completa, enviando el token como parámetro
+    const path = `${baseProtocol}/ws/chat/${roomName}/?token=${token}`;
+    
+    // CRÍTICO: Aseguramos que el protocolo sea WSS si la URL base es HTTPS
+    let finalPath = path;
+    if (baseProtocol.startsWith('https:')) {
+      finalPath = path.replace('https:', 'wss:');
+    } else if (baseProtocol.startsWith('http:')) {
+      finalPath = path.replace('http:', 'ws:');
+    }
+
+    this.socketRef = new WebSocket(finalPath);
+    // ----------------------------
 
     // ... (el resto del codigo onopen, onmessage, etc. sigue igual)
-    this.socketRef.onopen = () => { console.log('âœ… WebSocket conectado correctamente'); };
+    this.socketRef.onopen = () => { console.log('✅ WebSocket conectado correctamente'); };
     this.socketRef.onmessage = (e) => { this.socketNewMessage(e.data); };
-    this.socketRef.onerror = (e) => { console.error('âŒ Error de WebSocket:', e); };
-    this.socketRef.onclose = () => { console.log('ðŸ”Œ WebSocket desconectado'); };
+    this.socketRef.onerror = (e) => { console.error('❌ Error de WebSocket:', e); };
+    this.socketRef.onclose = () => { console.log('🔌 WebSocket desconectado'); };
   }
 
   // Desconectar
@@ -47,11 +62,11 @@ class WebSocketService {
     if (this.socketRef && this.socketRef.readyState === WebSocket.OPEN) {
       this.socketRef.send(JSON.stringify(data));
     } else {
-      console.warn('âš ï¸ No se pudo enviar: WebSocket no conectado');
+      console.warn('⚠️ No se pudo enviar: WebSocket no conectado');
     }
   }
 
-  // --- GestiÃ³n de Callbacks ---
+  // --- Gestión de Callbacks ---
   
   addCallbacks(newMessageCallback) {
     this.callbacks['new_message'] = newMessageCallback;
