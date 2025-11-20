@@ -1,0 +1,56 @@
+@startuml
+
+skinparam class {
+    BackgroundColor<<vista>> LightBlue
+    BackgroundColor<<controller>> LightCyan
+    BackgroundColor<<modelo>> LightOrange
+    BorderColor Black
+}
+
+package "cmp Gestionar Traduccion" #LightGreen {
+    circle Usuario
+}
+
+class Traduccion <<vista>> {
+    ccolumno
+    --
+    ID_Documento: varchar(50)
+    Idioma_Origen: varchar(50)
+    Idioma_Destino: varchar(50)
+    Texto_Traducido: varchar(5000)
+}
+
+class ControllerTraduccion <<controller>> {
+    ID_Documento: Int
+    Idioma_Origen: Int
+    Idioma_Destino: Int
+}
+
+class Document <<modelo>> {
+    ID: Int
+    Extracted_Content: Int
+    Owner_ID: Int
+    Folder_ID: Int
+    Uploaded_At: Int
+    --
+    + SHOW(): void
+    + EXTRACT_TEXT(): void
+}
+
+class TranslationHistory <<modelo>> {
+    ID: Int
+    Document_ID: Int
+    User_ID: Int
+    Source_Language: Int
+    Target_Language: Int
+    Translated_Content: Int
+    Translated_At: Int
+    --
+    + Ver(): void
+    + Registrar(): void
+}
+
+Document "1" -- "1..*" TranslationHistory
+
+@enduml
+

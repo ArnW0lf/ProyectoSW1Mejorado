@@ -1,0 +1,7 @@
+Esta guía detalla cómo construir un backend con FastAPI que utiliza la API de Gemini para adaptar contenido (título y texto) para diferentes redes sociales.  El proceso incluye:
+
+1.  **Configurar la conexión a la API de Gemini:** Instalación de `python-dotenv` para manejar la clave de API y creación del archivo `llm_service.py` para inicializar el cliente de Gemini.
+2.  **Definir prompts específicos por red social:** Creación de un diccionario en `llm_service.py` con prompts formateados para Facebook, Instagram, LinkedIn, TikTok y WhatsApp, dictando el tono y formato deseados para cada plataforma.
+3.  **Implementar el servicio de adaptación:** Creación de la función `adaptar_contenido` en `llm_service.py` que selecciona el prompt adecuado, lo formatea con el contenido del usuario y llama a la API de Gemini para generar el texto adaptado en formato JSON.
+4.  **Crear el endpoint FastAPI:** Definición de modelos Pydantic (`schemas.py`) para la solicitud y respuesta, y creación del endpoint `/api/posts/adapt` en `main.py` que recibe el título, el contenido y una lista de redes sociales, llama al servicio de adaptación para cada red, y devuelve un diccionario con las adaptaciones generadas. Se configura CORS para permitir la comunicación con un frontend React.
+5.  **Probar el endpoint con Postman/Insomnia:** Se dan instrucciones para enviar una solicitud POST con un JSON de prueba y verificar la respuesta con las adaptaciones generadas por Gemini para cada red social.

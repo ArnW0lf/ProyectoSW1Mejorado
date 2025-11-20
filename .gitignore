@@ -1,0 +1,16 @@
+# Entornos virtuales (¡Asegúrate de que 'entorno/' esté allí!)
+venv/
+.venv/
+entorno/   
+*/venv/
+*/entorno/ 
+
+# Archivos de caché
+__pycache__/
+*.pyc
+
+# Base de datos local
+db.sqlite3
+
+# Archivos de entorno (seguridad)
+.env
