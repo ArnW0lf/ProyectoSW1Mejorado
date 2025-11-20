@@ -39,15 +39,21 @@ INSTALLED_APPS = [
     'corsheaders',
     'api',
     'chat',
+    
     # Apps de terceros para la API y autenticación
     'rest_framework',
     'rest_framework.authtoken',
-    'dj_rest_auth',
-    'django.contrib.sites',  # Requerido por allauth
+    
+    # 💥 ELIMINADO: 'dj_rest_auth', 'dj_rest_auth.registration'
+    
+    'django.contrib.sites',
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
-    'dj_rest_auth.registration',
+    
+    # 💥 NUEVO: djoser para manejar la autenticación
+    'djoser', 
+    
     'django_filters',
 ]
 
@@ -107,7 +113,6 @@ else:
 
 
 # Password validation... (Sin cambios)
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -125,7 +130,6 @@ AUTH_PASSWORD_VALIDATORS = [
 
 
 # Internationalization... (Sin cambios)
-
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True
@@ -153,9 +157,24 @@ REST_FRAMEWORK = {
     ],
 }
 
-# --- CORRECCIÓN DE allauth (Final) ---
+# --- CONFIGURACIÓN DE DJOSER (Limpia y Moderna) ---
+
+# Reemplaza todo el bloque de configuración anterior de allauth/dj-rest-auth
+DJOSER = {
+    'USER_ID_FIELD': 'id', 
+    'PASSWORD_RESET_CONFIRM_URL': '#/password/reset/confirm/{uid}/{token}',
+    'USERNAME_RESET_CONFIRM_URL': '#/username/reset/confirm/{uid}/{token}',
+    'ACTIVATION_URL': '#/activate/{uid}/{token}',
+    'SEND_ACTIVATION_EMAIL': False, # Mejor dejar en False para desarrollo
+    'SERIALIZERS': {
+        'user_create': 'djoser.serializers.UserCreateSerializer',
+        'user': 'djoser.serializers.UserSerializer',
+    },
+}
+
+# Configuración de allauth (ahora usada por djoser)
 ACCOUNT_LOGIN_METHODS = ['username', 'email']
-ACCOUNT_SIGNUP_FIELDS = ['email*', 'username*', 'password1*', 'password2*'] # <-- ¡CORREGIDO!
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'username*', 'password1*', 'password2*'] 
 ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 ACCOUNT_EMAIL_CONFIRMATION_HMAC= False

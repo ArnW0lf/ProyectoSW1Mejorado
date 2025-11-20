@@ -10,9 +10,14 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter
 from rest_framework.decorators import action
 from django.db.models import Q
-from dj_rest_auth.registration.views import RegisterView, VerifyEmailView 
+
+# --- IMPORTS CORREGIDOS PARA DJOSER/ALLAUTH ---
+# 💥 CORRECCIÓN CRÍTICA: Se usa ConfirmEmailView en lugar de VerifyEmailView 💥
+from allauth.account.views import ConfirmEmailView as BaseVerifyEmailView 
 from allauth.account.models import EmailConfirmation
 from django.urls import reverse
+# ----------------------------------------------
+
 from .models import Profile, Folder, Document, Tag, DocumentPermission
 from .serializers import ProfileSerializer, FolderSerializer, DocumentSerializer, TagSerializer, DocumentPermissionSerializer
 from .permissions import IsOwnerOrHasPermission
@@ -23,7 +28,7 @@ from io import BytesIO
 from docx import Document as DocxDocument
 from rest_framework.exceptions import PermissionDenied
 
-# IMPORTACIONES PARA PDF
+# IMPORTS PARA PDF
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
@@ -94,7 +99,7 @@ def ai_assistant(request):
     except Exception as e:
         return Response({'error': str(e)}, status=500)
 
-class CustomVerifyEmailView(VerifyEmailView):
+class CustomVerifyEmailView(BaseVerifyEmailView): # ⬅️ HEREDA DE ConfirmEmailView
     """
     Vista personalizada para manejar la verificación de correo electrónico.
     Toma la clave de la URL, la procesa y redirige al frontend.
@@ -103,13 +108,18 @@ class CustomVerifyEmailView(VerifyEmailView):
     def get(self, request, key, *args, **kwargs):
         self.kwargs['key'] = key
         
+        # En producción, usa variables de entorno
         frontend_url_success = 'http://localhost:5173/verify-email?success=true'
         frontend_url_failure = 'http://localhost:5173/verify-email?success=false'
 
         try:
-            confirmation = self.get_object()
+            # Reimplementación limpia de la lógica de verificación
+            confirmation = EmailConfirmation.objects.get(key=self.kwargs['key'])
             confirmation.confirm(self.request)
             return redirect(frontend_url_success)
+        except EmailConfirmation.DoesNotExist:
+            print(f"Error al verificar correo: Key no encontrada.")
+            return redirect(frontend_url_failure)
         except Exception as e:
             print(f"Error al verificar correo: {e}")
             return redirect(frontend_url_failure)
@@ -405,44 +415,4 @@ class TranslationHistoryViewSet(viewsets.ReadOnlyModelViewSet):
         return TranslationHistory.objects.filter(user=self.request.user)
 
 
-
-
-class CustomRegisterView(RegisterView):
-    """
-    Vista personalizada que captura el usuario y devuelve la URL de verificación.
-    """
-    
-    # 1. MÉTODO NUEVO: Capturamos el usuario cuando se crea
-    def perform_create(self, serializer):
-        user = super().perform_create(serializer)
-        self.user = user  # <--- ¡ESTO SOLUCIONA EL ERROR "no attribute user"!
-        return user
-
-    def create(self, request, *args, **kwargs):
-        # 2. Llamar a la creación estándar
-        response = super().create(request, *args, **kwargs)
-        
-        # 3. Si se creó correctamente (201), inyectar la URL
-        if response.status_code == 201:
-            try:
-                # Ahora self.user SÍ existe porque lo guardamos en perform_create
-                user = self.user
-                
-                # Buscar la confirmación
-                confirmation = EmailConfirmation.objects.filter(
-                    email_address__user=user
-                ).order_by('-created').first()
-                
-                if confirmation:
-                    # Construir la URL
-                    verification_path = reverse('account_confirm_email', kwargs={'key': confirmation.key})
-                    verification_url = request.build_absolute_uri(verification_path)
-                    
-                    # Enviarla al frontend
-                    response.data['verification_url'] = verification_url
-                    print(f"✅ URL de verificación generada para Frontend: {verification_url}")
-                    
-            except Exception as e:
-                print(f"⚠️ Error generando URL automática: {e}")
-        
-        return response
+# La clase CustomRegisterView ha sido eliminada.
