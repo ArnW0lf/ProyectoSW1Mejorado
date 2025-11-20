@@ -5,16 +5,14 @@ services:
     name: traductordb
     region: oregon # O la region que prefieras
     plan: starter # O el plan que elijas (Starter plan recomendado para inicio)
-    postgresData: # <--- NUEVA SECCIÓN
-      databaseName: traductordb # <--- Corregido
+    databaseName: traductordb
 
   # 2. BROKER DE CANALES (Redis para WebSockets)
   - type: redis
     name: redis-broker
     region: oregon
     plan: starter
-    redisData: # <--- NUEVA SECCIÓN
-      maxmemory: 20mb # <--- Corregido
+    maxmemory: 20mb # <--- MOVIDO AQUÍ, SIN ANIDAR
 
   # 3. SERVIDOR WEB (Django + WebSockets)
   - type: web
