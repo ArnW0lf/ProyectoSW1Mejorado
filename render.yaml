@@ -5,23 +5,22 @@ services:
     name: traductordb
     region: oregon
     plan: starter
-    # No se requieren parámetros de DB adicionales
     
   # 2. BROKER DE CANALES (Redis para WebSockets)
   - type: redis
     name: redis-broker
     region: oregon
     plan: starter
-    # No se requieren parámetros de Redis adicionales
+    ipAllowList: [] # CRÍTICO: Permite acceso desde la red interna de Render
 
   # 3. SERVIDOR WEB (Django + WebSockets)
   - type: web
     name: mi-backend-django
     region: oregon
     env: python
+    startCommand: "daphne backend.asgi:application -b 0.0.0.0 -p 10000" # Mover aquí
     plan: starter
     buildCommand: "./build.sh" 
-    startCommand: "daphne backend.asgi:application -b 0.0.0.0 -p 10000"
     
     envVars:
       - key: DATABASE_URL 
