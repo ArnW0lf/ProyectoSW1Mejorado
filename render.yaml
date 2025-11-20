@@ -1,4 +1,4 @@
-# render.yaml (Versión Minimalista y Final)
+# render.yaml (Versión Definitiva y Corregida)
 services:
   # 1. BASE DE DATOS (PostgreSQL)
   - type: pserv
@@ -11,14 +11,16 @@ services:
     name: redis-broker
     region: oregon
     plan: starter
-    ipAllowList: [] # CRÍTICO: Permite acceso desde la red interna de Render
-
+    # CRÍTICO: Permitir acceso solo desde la red interna de Render
+    ipAllowList:
+      - source: private
+      
   # 3. SERVIDOR WEB (Django + WebSockets)
   - type: web
     name: mi-backend-django
     region: oregon
     env: python
-    startCommand: "daphne backend.asgi:application -b 0.0.0.0 -p 10000" # Mover aquí
+    startCommand: "daphne backend.asgi:application -b 0.0.0.0 -p 10000"
     plan: starter
     buildCommand: "./build.sh" 
     
