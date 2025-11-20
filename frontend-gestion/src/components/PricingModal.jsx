@@ -116,7 +116,7 @@ const PricingModal = ({ opened, onClose, onUpgrade, isUpgrading }) => {
     { text: '5 peticiones de IA por día', available: true },
     { text: '10 mensajes de chat por día', available: true },
     { text: 'Búsqueda básica', available: true },
-    { text: 'Traducción de documentos', available: false },
+    { text: 'Traducción de documentos limitado', available: true },
     { text: 'Mapas conceptuales con IA', available: false },
     { text: 'Almacenamiento ilimitado', available: false },
     { text: 'Asistente IA ilimitado', available: false },

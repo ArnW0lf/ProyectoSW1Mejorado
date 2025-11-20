@@ -50,7 +50,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         can_send = await self.check_message_limit(self.user)
         if not can_send:
             await self.send(text_data=json.dumps({
-                'message': "ðŸš« LÃ­mite diario alcanzado (10 msgs). Simula tu pago a Premium para continuar.",
+                'message': "Límite diario alcanzado (10 msgs). Actualiza tu Plan a Premium para continuar.",
                 'username': "Sistema"
             }))
             return
@@ -112,7 +112,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             if 'error' not in translation_result:
                 translated_text = translation_result['translated_text']
             else:
-                print(f"Error de traducciÃ³n: {translation_result['error']}")
+                print(f"Error de traducción: {translation_result['error']}")
                 translated_text = f"Error al traducir: {message}" # Enviar error al cliente
 
         # 6. Enviar el mensaje (traducido o no) de vuelta al frontend de este usuario
