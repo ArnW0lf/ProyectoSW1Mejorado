@@ -1,6 +1,6 @@
 import { useState } from 'react'; // <--- 1. Importar useState
 import { AppShell } from '@mantine/core';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import ChatWindow from './components/ChatWindow';
 import LoginPage from './pages/LoginPage';
@@ -17,9 +17,9 @@ import DocumentViewPage from './pages/DocumentViewPage';
 
 function App() {
   const { isAuthenticated } = useAuth();
-  
+
   // 2. Estado para controlar la sala activa (null = cerrado)
-  const [activeRoom, setActiveRoom] = useState(null); 
+  const [activeRoom, setActiveRoom] = useState(null);
 
   return (
     <AppShell
@@ -56,22 +56,23 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route 
+          <Route
             path="/profile"
             element={<ProtectedRoute><ProfilePage /></ProtectedRoute>}
           />
-          <Route 
+          <Route
             path="/documento/:id"
             element={<ProtectedRoute><DocumentViewPage /></ProtectedRoute>}
           />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
 
         {/* 4. El ChatWindow es dinámico ahora */}
         {isAuthenticated && activeRoom && (
-          <ChatWindow 
-            roomName={activeRoom} 
+          <ChatWindow
+            roomName={activeRoom}
             onClose={() => setActiveRoom(null)} // Función para cerrar la sala
-          /> 
+          />
         )}
       </AppShell.Main>
     </AppShell>

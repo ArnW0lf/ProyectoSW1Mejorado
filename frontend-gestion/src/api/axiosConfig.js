@@ -7,4 +7,9 @@ const apiClient = axios.create({
   },
 });
 
+const token = localStorage.getItem('authToken');
+if (token) {
+  apiClient.defaults.headers.common['Authorization'] = `Token ${token}`;
+}
+
 export default apiClient;

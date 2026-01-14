@@ -16,7 +16,7 @@ import { useAuth } from '../context/AuthContext';
 import { notifications } from '@mantine/notifications';
 import { useNavigate } from 'react-router-dom';
 
-import logo from '../assets/logos.png'; 
+import logo from '../assets/logos.png';
 
 const LoginPage = () => {
   const { login } = useAuth();
@@ -31,7 +31,7 @@ const LoginPage = () => {
     try {
       await login(username, password);
       notifications.show({ title: 'Éxito', message: 'Inicio de sesión correcto', color: 'green' });
-      navigate('/home'); // Redirige a la página principal
+      navigate('/'); // Redirige a la página principal
     } catch (error) {
       notifications.show({ title: 'Error', message: error.message || 'Credenciales inválidas', color: 'red' });
     } finally {
@@ -41,7 +41,7 @@ const LoginPage = () => {
 
   return (
     <Container size={420} my={40}>
-     <Group justify="center" mb="xl">
+      <Group justify="center" mb="xl">
         <Image
           src={logo}
           alt="Lingua-Sync AI Logo"

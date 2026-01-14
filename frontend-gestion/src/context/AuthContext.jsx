@@ -41,17 +41,17 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (username, password) => {
     const data = await apiLogin(username, password);
-    const token = data.key;
+    const token = data.auth_token;
     localStorage.setItem('authToken', token);
     apiClient.defaults.headers.common['Authorization'] = `Token ${token}`;
-    
+
     try {
       const userData = await getUser();
       setUser(userData);
     } catch (e) {
       console.error("Error al obtener el usuario después de iniciar sesión", e);
     }
-    
+
     setAuthToken(token);
   };
 
