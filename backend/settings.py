@@ -195,18 +195,20 @@ else:
     # CRÍTICO: Limpiar la URL para eliminar cualquier protocolo duplicado
     import re
     if RENDER_EXTERNAL_URL:
-        # 1. Limpiamos 'https://' o 'wss://' de la URL inyectada por Render
-        # Obtenemos solo el hostname (ej: mi-backend-django.onrender.com)
         HOSTNAME = re.sub(r'^https?://|^wss?://', '', RENDER_EXTERNAL_URL)
-
-        # 2. Construimos las URLs de CORS usando el hostname limpio
         CORS_ALLOWED_ORIGINS = [
             f"https://{HOSTNAME}",  # PROTOCOLO HTTPS (DRF/API)
             f"wss://{HOSTNAME}",    # PROTOCOLO WSS (WebSockets)
-            # Asegúrate de incluir aquí el dominio HTTPS de tu Frontend de Render si es un Static Site separado
         ]
+        
+        # Agregamos la URL del frontend si está configurada en las variables de entorno
+        FRONTEND_URL = os.environ.get("FRONTEND_URL")
+        if FRONTEND_URL:
+            # Quitamos el slash final si lo tuviera por error
+            clean_frontend_url = FRONTEND_URL.rstrip('/')
+            CORS_ALLOWED_ORIGINS.append(clean_frontend_url)
     else:
-        # Fallback si RENDER_EXTERNAL_URL no está definido (aunque no debería ocurrir en Render)
+        # Fallback si RENDER_EXTERNAL_URL no está definido
         CORS_ALLOWED_ORIGINS = []
 
 CORS_ALLOW_CREDENTIALS = True
