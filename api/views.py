@@ -186,6 +186,15 @@ class DocumentViewSet(viewsets.ModelViewSet):
     search_fields = ['file', 'tags__name', 'extracted_content']
     filterset_fields = ['tags', 'folder']
 
+    def create(self, request, *args, **kwargs):
+        print("====== DEBUG BACKEND ======")
+        print("DATA:", request.data)
+        print("FILES:", request.FILES)
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            print("ERRORS:", serializer.errors)
+        return super().create(request, *args, **kwargs)
+
     def perform_create(self, serializer):
         user = self.request.user
         if user.profile.subscription_plan == 'free':

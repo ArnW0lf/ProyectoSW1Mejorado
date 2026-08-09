@@ -81,7 +81,6 @@ const UploadModal = ({ opened, onClose, onUploadSuccess }) => {
         </Center>
       ) : (
         <>
-          {/* Dropdown de Carpetas */}
           <Select
             label="Elegir carpeta (Opcional)"
             placeholder="Subir a la raíz"
@@ -91,7 +90,7 @@ const UploadModal = ({ opened, onClose, onUploadSuccess }) => {
             leftSection={<IconFolder size={16} />}
             clearable
             mb="md"
-            withinPortal // Importante para que el dropdown se vea
+            comboboxProps={{ withinPortal: true }} // Sintaxis correcta en Mantine v7
           />
         
           {/* --- ¡SINTAXIS CORREGIDA! --- */}
@@ -100,7 +99,7 @@ const UploadModal = ({ opened, onClose, onUploadSuccess }) => {
             onDrop={handleDrop}
             onReject={(files) => console.log('Archivos rechazados:', files)}
             maxSize={5 * 1024 ** 2}
-            accept={[MIME_TYPES.pdf, MIME_TYPES.doc, MIME_TYPES.docx, MIME_TYPES.txt]}
+            accept={[MIME_TYPES.pdf, MIME_TYPES.doc, MIME_TYPES.docx, 'text/plain']}
             multiple={false}
           >
             {/* Ponemos el Group directamente adentro, como en la versión que sí funcionaba */}
