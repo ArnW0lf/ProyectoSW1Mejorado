@@ -80,7 +80,7 @@ export const uploadDocument = async (file, folderId) => {
     try {
         const response = await apiClient.post('/documents/', formData, {
             headers: {
-                'Content-Type': null, // Permite al navegador setear el multipart/form-data
+                'Content-Type': 'multipart/form-data', 
             },
         });
         return response.data;

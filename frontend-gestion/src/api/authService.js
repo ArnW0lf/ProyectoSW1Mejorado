@@ -1,55 +1,55 @@
-// authService.js (Forzando el header como prueba)
+// authService.js (FINALMENTE CORREGIDO para DJOSER y COMPATIBILIDAD)
 import apiClient from "./axiosConfig";
 
-// Función de Login (con header forzado)
+// Función de Login 
 export const login = async (username, password) => {
     const data = {
         username,
         password,
     };
 
-    // Opciones de configuración para esta llamada específica
     const config = {
         headers: {
             'Content-Type': 'application/json'
         }
     };
 
-    // Pasamos la data y la configuración
-    const response = await apiClient.post('/auth/login/', data, config);
+    // 💥 CORRECCIÓN URL: /auth/login/ -> /token/login/
+    const response = await apiClient.post('/token/login/', data, config); 
     
-    if (response.data.key) {
-        localStorage.setItem('authToken', response.data.key);
+    // 💥 CORRECCIÓN TOKEN: Djoser devuelve 'auth_token', no 'key'
+    if (response.data.auth_token) { 
+        localStorage.setItem('authToken', response.data.auth_token);
     }
     return response.data;
 };
 
-// --- El resto de tus funciones (register, logout) ---
-
 // UC-01: Registro
 export const register = async (username, email, password1, password2) => {
-    const response = await apiClient.post('/auth/register/', {
+    // 💥 CORRECCIÓN URL: /auth/register/ -> /users/
+    // 💥 PAYLOAD COMPATIBLE: Mantenemos 'password1' y 'password2' para el Backend
+    const response = await apiClient.post('/users/', {
         username,
         email,
-        password1: password1, 
-        password2,
+        password: password1, // El Serializer de Djoser espera 'password'
+        re_password: password2, // El Serializer de Djoser espera 're_password'
     });
     return response.data;
 };
 
 // UC-03: Cierre de sesión
 export const logout = async () => {
-  await apiClient.post('/auth/logout/');
+  // 💥 CORRECCIÓN URL: /auth/logout/ -> /token/logout/
+  await apiClient.post('/token/logout/');
 };
 
 /**
  * UC-06: Ver datos de usuario
- * Obtiene los datos del usuario autenticado.
  */
 export const getUser = async () => {
     try {
-        // apiClient ya tiene el token inyectado por AuthContext
-        const response = await apiClient.get('/auth/user/');
+        // 💥 CORRECCIÓN URL: /auth/user/ -> /users/me/
+        const response = await apiClient.get('/users/me/');
         return response.data;
     } catch (error) {
         console.error('Error al obtener datos del usuario:', error);
@@ -58,7 +58,8 @@ export const getUser = async () => {
 };
 
 /**
- * UC-07/08: Obtiene el perfil extendido del usuario.
+ * UC-07/08: Obtiene y Actualiza el perfil extendido del usuario.
+ * Nota: Asumo que /profile/ es una ruta personalizada y se mantiene.
  */
 export const getProfile = async () => {
     try {
@@ -70,9 +71,6 @@ export const getProfile = async () => {
     }
 };
 
-/**
- * UC-07/08: Actualiza el perfil extendido del usuario.
- */
 export const updateProfile = async (profileData) => {
     try {
         const response = await apiClient.patch('/profile/', profileData);
@@ -85,11 +83,11 @@ export const updateProfile = async (profileData) => {
 
 /**
  * UC-04: Solicitar reseteo de contraseña.
- * Envía un email al usuario con un enlace de reseteo.
  */
 export const requestPasswordReset = async (email) => {
     try {
-        const response = await apiClient.post('/auth/password/reset/', { email });
+        // 💥 CORRECCIÓN URL: /auth/password/reset/ -> /users/reset_password/
+        const response = await apiClient.post('/users/reset_password/', { email });
         return response.data;
     } catch (error) {
         console.error('Error al solicitar reseteo de contraseña:', error);
@@ -99,13 +97,14 @@ export const requestPasswordReset = async (email) => {
 
 /**
  * UC-04: Confirmar nueva contraseña.
- * Envía la nueva contraseña junto con el uid y token de la URL.
  */
 export const confirmPasswordReset = async (new_password1, new_password2, uid, token) => {
     try {
-        const response = await apiClient.post('/auth/password/reset/confirm/', {
-            new_password1,
-            new_password2,
+        // 💥 CORRECCIÓN URL: /auth/password/reset/confirm/ -> /users/reset_password_confirm/
+        // Mapeo de campos a lo que Djoser espera:
+        const response = await apiClient.post('/users/reset_password_confirm/', {
+            new_password: new_password1, // Djoser espera 'new_password'
+            re_new_password: new_password2, // Djoser espera 're_new_password'
             uid,
             token,
         });
@@ -118,7 +117,6 @@ export const confirmPasswordReset = async (new_password1, new_password2, uid, to
 
 /**
  * SIMULACIÓN DE PAGO:
- * Llama al endpoint que convierte al usuario en Premium instantáneamente.
  */
 export const upgradeToPremium = async () => {
     try {
